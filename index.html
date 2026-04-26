@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BizFinder">
+<title>BizFinder Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0C0C0F;--card:#161619;--card2:#1E1E23;
+  --border:#2A2A30;--text:#F0EEE8;--muted:#666;
+  --accent:#3D7EFF;--accent2:#FF4D2E;--green:#22C55E;
+  --mono:'DM Mono',monospace;
+  --safe-top:env(safe-area-inset-top);
+  --safe-bot:env(safe-area-inset-bottom);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:'Syne',sans-serif;color:var(--text);display:flex;flex-direction:column}
+
+/* ── TOP BAR ── */
+.topbar{
+  background:var(--bg);
+  padding:calc(var(--safe-top) + 12px) 20px 12px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;position:relative;z-index:10;
+}
+.topbar-logo{font-size:18px;font-weight:800;letter-spacing:-0.5px}
+.topbar-logo span{color:var(--accent)}
+.topbar-right{display:flex;gap:8px;align-items:center}
+.icon-btn{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--card2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--muted);transition:all .15s;
+}
+.icon-btn:active{background:var(--border);transform:scale(.95)}
+.icon-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* ── SCROLL AREA ── */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 0 calc(80px + var(--safe-bot)) 0}
+
+/* ── BOTTOM NAV ── */
+.bottomnav{
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(12,12,15,0.95);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  padding:10px 0 calc(var(--safe-bot) + 6px);
+  display:flex;z-index:10;
+}
+.nav-tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:6px 0;cursor:pointer;color:var(--muted);
+  font-family:var(--mono);font-size:9px;letter-spacing:.5px;
+  transition:color .15s;border:none;background:none;
+}
+.nav-tab svg{transition:transform .15s}
+.nav-tab.active{color:var(--accent)}
+.nav-tab:active svg{transform:scale(.85)}
+
+/* ── PAGES ── */
+.page{display:none;padding:20px 16px}
+.page.active{display:block}
+
+/* ── SECTION HEADER ── */
+.section-head{margin-bottom:20px}
+.section-title{font-size:24px;font-weight:800;letter-spacing:-1px;line-height:1.1}
+.section-title em{color:var(--accent);font-style:normal}
+.section-sub{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.3px}
+
+/* ── FORM ELEMENTS ── */
+.field{margin-bottom:14px}
+.field-label{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block}
+input,select{
+  width:100%;padding:13px 14px;
+  background:var(--card);border:1.5px solid var(--border);
+  border-radius:12px;color:var(--text);
+  font-family:'Syne',sans-serif;font-size:15px;font-weight:500;
+  outline:none;-webkit-appearance:none;appearance:none;
+  transition:border-color .15s;
+}
+input:focus,select:focus{border-color:var(--accent)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+
+/* Quick tags */
+.tags-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;margin-top:8px}
+.tags-scroll::-webkit-scrollbar{display:none}
+.qtag{
+  flex-shrink:0;font-family:var(--mono);font-size:11px;font-weight:500;
+  padding:6px 12px;border-radius:20px;
+  background:var(--card2);border:1px solid var(--border);
+  color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.qtag:active{background:var(--accent);border-color:var(--accent);color:#fff;transform:scale(.96)}
+
+/* Grid */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+
+/* Toggle */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:10px}
+.toggle-info h4{font-size:13px;font-weight:600;margin-bottom:2px}
+.toggle-info p{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.sw{position:relative;width:44px;height:26px;flex-shrink:0}
+.sw input{opacity:0;width:0;height:0}
+.sw-track{position:absolute;inset:0;border-radius:13px;background:var(--border);cursor:pointer;transition:background .2s}
+.sw input:checked~.sw-track{background:var(--accent)}
+.sw-thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.sw input:checked~.sw-thumb{transform:translateX(18px)}
+
+/* ── BIG SEARCH BUTTON ── */
+.search-btn{
+  width:100%;padding:16px;
+  background:var(--accent);color:#fff;
+  border:none;border-radius:14px;
+  font-family:'Syne',sans-serif;font-size:16px;font-weight:700;
+  cursor:pointer;transition:all .15s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  letter-spacing:-.2px;margin-top:6px;
+}
+.search-btn:active{transform:scale(.98);background:#2d6be8}
+.search-btn:disabled{background:#2a3a5c;color:#4a6090;cursor:not-allowed}
+
+/* ── PROGRESS ── */
+.prog-wrap{display:none;margin:16px 0}
+.prog-wrap.vis{display:block}
+.prog-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.prog-label{font-family:var(--mono);font-size:11px;color:var(--text)}
+.prog-pct{font-family:var(--mono);font-size:11px;color:var(--accent);font-weight:600}
+.prog-bg{height:3px;background:var(--card2);border-radius:2px;overflow:hidden}
+.prog-fill{height:3px;background:var(--accent);border-radius:2px;transition:width .4s;width:0}
+.prog-sub{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── STATUS ── */
+.status-row{display:none;align-items:center;gap:8px;padding:10px 14px;background:rgba(61,126,255,.08);border:1px solid rgba(61,126,255,.2);border-radius:10px;margin-bottom:14px;font-family:var(--mono);font-size:11px;color:var(--accent)}
+.status-row.vis{display:flex}
+.spin{width:12px;height:12px;border:2px solid rgba(61,126,255,.2);border-top-color:var(--accent);border-radius:50%;animation:sp .6s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ── ALERT ── */
+.alert{padding:12px 14px;border-radius:10px;font-size:13px;margin-bottom:14px;display:none;line-height:1.6}
+.alert.vis{display:block}
+.alert-err{background:rgba(255,77,46,.1);border:1px solid rgba(255,77,46,.3);color:#ff8070}
+.alert-ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--green)}
+
+/* ── RESULTS HEADER ── */
+.results-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;background:var(--card);border:1px solid var(--border);
+  border-radius:12px;margin-bottom:12px;
+}
+.results-counts{display:flex;gap:8px}
+.rc{font-family:var(--mono);font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px}
+.rc-total{background:rgba(255,255,255,.08);color:var(--text)}
+.rc-email{background:rgba(61,126,255,.15);color:var(--accent);display:none}
+.rc-email.vis{display:block}
+.export-btns{display:flex;gap:6px}
+.exp-btn{font-family:var(--mono);font-size:10px;padding:5px 10px;border-radius:6px;background:var(--card2);border:1px solid var(--border);color:var(--muted);cursor:pointer;white-space:nowrap}
+.exp-btn:active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* ── BUSINESS CARDS ── */
+.biz-list{display:flex;flex-direction:column;gap:10px}
+.biz-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:14px 14px 12px;
+  transition:border-color .15s;
+  position:relative;overflow:hidden;
+}
+.biz-card.has-email{border-left:3px solid var(--accent)}
+.biz-card::before{content:attr(data-num);position:absolute;top:12px;right:14px;font-family:var(--mono);font-size:10px;color:var(--border);font-weight:600}
+.biz-name{font-size:15px;font-weight:700;letter-spacing:-.3px;margin-bottom:5px;padding-right:28px;line-height:1.25}
+.chip{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:5px;vertical-align:middle}
+.open-chip{background:rgba(34,197,94,.15);color:var(--green)}
+.closed-chip{background:rgba(255,77,46,.12);color:#ff8070}
+.biz-addr{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px;line-height:1.4}
+.biz-meta{display:flex;flex-wrap:wrap;gap:4px 12px;font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px}
+.biz-stars{color:#D97706}
+.email-area{margin-bottom:8px}
+.email-chips{display:flex;flex-wrap:wrap;gap:5px}
+.echip{display:inline-flex;align-items:center;gap:4px;background:rgba(61,126,255,.1);color:var(--accent);border:1px solid rgba(61,126,255,.2);border-radius:6px;padding:4px 8px;font-family:var(--mono);font-size:10px;text-decoration:none;font-weight:500}
+.no-email{font-family:var(--mono);font-size:10px;color:var(--border)}
+.scraping-ind{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.mini-spin{width:10px;height:10px;border:1.5px solid rgba(255,255,255,.1);border-top-color:var(--accent);border-radius:50%;animation:sp .6s linear infinite}
+.biz-actions{display:flex;gap:6px;flex-wrap:wrap}
+.bact{font-family:var(--mono);font-size:10px;font-weight:500;padding:6px 12px;border-radius:8px;text-decoration:none;display:inline-block;transition:all .15s;cursor:pointer;border:none}
+.bact:active{transform:scale(.95)}
+.ba-maps{background:var(--card2);color:var(--text);border:1px solid var(--border)}
+.ba-call{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.ba-web{background:var(--card2);color:var(--muted);border:1px solid var(--border)}
+.ba-dis{background:transparent;color:var(--border);border:1px solid var(--border);opacity:.4;pointer-events:none}
+
+/* ── SETTINGS PAGE ── */
+.settings-section{margin-bottom:24px}
+.settings-section h3{font-size:13px;font-weight:700;letter-spacing:-.2px;margin-bottom:12px;color:var(--muted);text-transform:uppercase;font-family:var(--mono);font-size:10px;letter-spacing:1px}
+.key-wrap{position:relative}
+.key-wrap input{padding-right:70px;font-family:var(--mono);font-size:13px}
+.key-show{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:10px;color:var(--accent);background:none;border:none;cursor:pointer;font-weight:600;padding:4px}
+.save-btn{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px;transition:all .15s}
+.save-btn:active{transform:scale(.98)}
+.key-status{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;padding:8px 12px;border-radius:8px;margin-top:8px}
+.ks-ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:var(--green)}
+.ks-none{background:rgba(255,77,46,.1);border:1px solid rgba(255,77,46,.2);color:#ff8070}
+.info-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
+.info-card h4{font-size:13px;font-weight:700;margin-bottom:6px}
+.info-card p{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.6}
+
+/* ── HISTORY PAGE ── */
+.hist-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.hist-item:active{border-color:var(--accent)}
+.hist-item h4{font-size:13px;font-weight:700;margin-bottom:4px}
+.hist-item p{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.hist-meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.hist-count{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent)}
+.hist-date{font-family:var(--mono);font-size:9px;color:var(--border)}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:.3}
+
+/* ── ABOUT ── */
+.about-hero{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:16px}
+.about-hero h2{font-size:22px;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+.about-hero p{font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.6}
+.feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.feat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px}
+.feat-icon{font-size:20px;margin-bottom:8px}
+.feat h4{font-size:12px;font-weight:700;margin-bottom:4px}
+.feat p{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.5}
+
+/* ── SHARE SHEET (CSV copy) ── */
+.share-toast{
+  position:fixed;bottom:calc(90px + var(--safe-bot));left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--green);color:#fff;
+  font-family:var(--mono);font-size:12px;font-weight:600;
+  padding:10px 20px;border-radius:20px;
+  opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:99;
+}
+.share-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">Biz<span>Finder</span></div>
+  <div class="topbar-right">
+    <div class="icon-btn" id="api-indicator" title="API Status">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    </div>
+  </div>
+</div>
+
+<!-- SCROLL CONTENT -->
+<div class="scroll" id="scroll">
+
+  <!-- SEARCH PAGE -->
+  <div class="page active" id="page-search">
+    <div class="section-head" style="margin-top:4px">
+      <div class="section-title">Find <em>Businesses</em></div>
+      <div class="section-sub">// Google Maps · Real data · Email extraction</div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Business Type</label>
+      <input type="text" id="biz-type" placeholder="vet clinics, dentists..." autocomplete="off" autocorrect="off" autocapitalize="off"/>
+      <div class="tags-scroll">
+        <span class="qtag" onclick="setQ('vet clinics')">🐾 Vets</span>
+        <span class="qtag" onclick="setQ('dentists')">🦷 Dentists</span>
+        <span class="qtag" onclick="setQ('restaurants')">🍽 Restaurants</span>
+        <span class="qtag" onclick="setQ('lawyers')">⚖️ Lawyers</span>
+        <span class="qtag" onclick="setQ('pharmacies')">💊 Pharmacies</span>
+        <span class="qtag" onclick="setQ('real estate agents')">🏠 Real Estate</span>
+        <span class="qtag" onclick="setQ('accountants')">📊 Accountants</span>
+        <span class="qtag" onclick="setQ('gyms')">💪 Gyms</span>
+        <span class="qtag" onclick="setQ('plumbers')">🔧 Plumbers</span>
+        <span class="qtag" onclick="setQ('electricians')">⚡ Electricians</span>
+        <span class="qtag" onclick="setQ('beauty salons')">💅 Salons</span>
+        <span class="qtag" onclick="setQ('physiotherapists')">🏥 Physio</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Location</label>
+      <input type="text" id="location" placeholder="Auckland NZ, Sydney AU..." autocomplete="off"/>
+      <div class="tags-scroll">
+        <span class="qtag" onclick="setL('Auckland NZ')">Auckland</span>
+        <span class="qtag" onclick="setL('Wellington NZ')">Wellington</span>
+        <span class="qtag" onclick="setL('Christchurch NZ')">Christchurch</span>
+        <span class="qtag" onclick="setL('Sydney AU')">Sydney</span>
+        <span class="qtag" onclick="setL('Melbourne AU')">Melbourne</span>
+        <span class="qtag" onclick="setL('Brisbane AU')">Brisbane</span>
+        <span class="qtag" onclick="setL('London UK')">London</span>
+        <span class="qtag" onclick="setL('New York US')">New York</span>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="field" style="margin-bottom:0">
+        <label class="field-label">Results</label>
+        <select id="max-results">
+          <option value="20">Up to 20</option>
+          <option value="60" selected>Up to 60</option>
+          <option value="120">Up to 120</option>
+          <option value="200">Up to 200</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label class="field-label">Min Rating</label>
+        <select id="min-rating">
+          <option value="0">Any ★</option>
+          <option value="3">3★+</option>
+          <option value="4">4★+</option>
+          <option value="4.5">4.5★+</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="toggle-row" style="margin-top:14px">
+      <div class="toggle-info">
+        <h4>Scrape emails</h4>
+        <p>Visit websites to find contact emails</p>
+      </div>
+      <label class="sw"><input type="checkbox" id="do-emails" checked><div class="sw-track"></div><div class="sw-thumb"></div></label>
+    </div>
+
+    <button class="search-btn" id="search-btn" onclick="startSearch()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      Search Google Maps
+    </button>
+
+    <div class="prog-wrap" id="pw" style="margin-top:16px">
+      <div class="prog-top"><span class="prog-label" id="pt">Searching...</span><span class="prog-pct" id="pp">0%</span></div>
+      <div class="prog-bg"><div class="prog-fill" id="pf"></div></div>
+      <div class="prog-sub" id="ps"></div>
+    </div>
+
+    <div class="status-row" id="sb"><div class="spin"></div><span id="st"></span></div>
+    <div class="alert alert-err" id="err"></div>
+    <div class="alert" id="no-key-warn" style="display:none!important" style="background:rgba(255,77,46,.1);border:1px solid rgba(255,77,46,.3);color:#ff8070">
+      ⚠ No API key set. <strong onclick="goSettings()" style="cursor:pointer;text-decoration:underline">Tap here to add it in Settings.</strong>
+    </div>
+
+    <div id="results-section" style="display:none;margin-top:6px">
+      <div class="results-head">
+        <div class="results-counts">
+          <span class="rc rc-total" id="rc-total">0</span>
+          <span class="rc rc-email" id="rc-email">0 emails</span>
+        </div>
+        <div class="export-btns">
+          <button class="exp-btn" onclick="cpCSV()">Copy CSV</button>
+          <button class="exp-btn" onclick="dlCSV()">↓ CSV</button>
+        </div>
+      </div>
+      <div class="biz-list" id="biz-list"></div>
+    </div>
+  </div>
+
+  <!-- HISTORY PAGE -->
+  <div class="page" id="page-history">
+    <div class="section-head" style="margin-top:4px">
+      <div class="section-title">Search <em>History</em></div>
+      <div class="section-sub">// Tap any search to reload results</div>
+    </div>
+    <div id="hist-container"></div>
+  </div>
+
+  <!-- SETTINGS PAGE -->
+  <div class="page" id="page-settings">
+    <div class="section-head" style="margin-top:4px">
+      <div class="section-title"><em>Settings</em></div>
+      <div class="section-sub">// Saved in your browser — always remembered</div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Google API Key</h3>
+      <div class="key-wrap">
+        <input type="password" id="api-key-inp" placeholder="AIzaSy..." autocomplete="off" autocorrect="off"/>
+        <button class="key-show" onclick="toggleKey()">Show</button>
+      </div>
+      <div id="key-status-badge"></div>
+      <button class="save-btn" onclick="saveKey()">Save Key Permanently</button>
+      <div class="alert alert-ok" id="key-saved-msg" style="margin-top:10px"></div>
+      <div class="alert alert-err" id="key-err-msg" style="margin-top:10px"></div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Default Location</h3>
+      <input type="text" id="def-loc" placeholder="Auckland NZ"/>
+      <button class="save-btn" style="margin-top:10px;background:var(--card2);border:1px solid var(--border);color:var(--text)" onclick="savePrefs()">Save Preferences</button>
+      <div class="alert alert-ok" id="prefs-saved" style="margin-top:10px"></div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Get a Free API Key</h3>
+      <div class="info-card">
+        <h4>🔑 Google Cloud Console</h4>
+        <p>1. Go to console.cloud.google.com<br>2. Create a project<br>3. Enable Places API<br>4. Create Credentials → API Key<br>5. Paste it above and tap Save<br><br>You get $200 free credit/month (~6,000 searches)</p>
+      </div>
+      <a href="https://console.cloud.google.com" target="_blank" style="display:block;text-align:center;padding:12px;background:var(--accent);color:#fff;border-radius:12px;font-weight:700;text-decoration:none;font-size:14px">Open Google Cloud Console ↗</a>
+    </div>
+
+    <div class="settings-section">
+      <h3>Data</h3>
+      <button onclick="clearHist()" style="width:100%;padding:13px;background:var(--card2);border:1px solid var(--border);border-radius:12px;color:#ff8070;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;cursor:pointer">Clear Search History</button>
+    </div>
+  </div>
+
+  <!-- ABOUT PAGE -->
+  <div class="page" id="page-about">
+    <div class="section-head" style="margin-top:4px">
+      <div class="section-title">About <em>BizFinder</em></div>
+      <div class="section-sub">// v2.0 iPhone Edition</div>
+    </div>
+    <div class="about-hero">
+      <h2>BizFinder Pro</h2>
+      <p>Your personal business intelligence tool. Finds real businesses from Google Maps and scrapes their contact emails — all from your iPhone. Works anywhere in the world.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat"><div class="feat-icon">🗺️</div><h4>Google Maps Data</h4><p>Same database as Google Maps — names, phones, addresses, ratings.</p></div>
+      <div class="feat"><div class="feat-icon">📧</div><h4>Email Scraper</h4><p>Visits websites to find real contact emails automatically.</p></div>
+      <div class="feat"><div class="feat-icon">🔍</div><h4>Multi-Zone Search</h4><p>Breaks the 60-result limit by searching multiple city zones.</p></div>
+      <div class="feat"><div class="feat-icon">📋</div><h4>CSV Export</h4><p>Copy results to clipboard or download as CSV for Excel.</p></div>
+      <div class="feat"><div class="feat-icon">🕐</div><h4>History</h4><p>Past searches saved — reload any time without re-searching.</p></div>
+      <div class="feat"><div class="feat-icon">🔑</div><h4>Key Saved</h4><p>API key stored in browser — enter once, remembered forever.</p></div>
+    </div>
+    <div style="margin-top:16px">
+      <p style="font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;line-height:1.8">
+        💡 Add to Home Screen for app-like experience<br>
+        Safari → Share → Add to Home Screen
+      </p>
+    </div>
+  </div>
+
+</div><!-- /scroll -->
+
+<!-- BOTTOM NAV -->
+<nav class="bottomnav">
+  <button class="nav-tab active" id="tab-search" onclick="goTab('search')">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    SEARCH
+  </button>
+  <button class="nav-tab" id="tab-history" onclick="goTab('history')">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+    HISTORY
+  </button>
+  <button class="nav-tab" id="tab-settings" onclick="goTab('settings')">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    SETTINGS
+  </button>
+  <button class="nav-tab" id="tab-about" onclick="goTab('about')">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    ABOUT
+  </button>
+</nav>
+
+<div class="share-toast" id="toast">Copied to clipboard!</div>
+
+<script>
+const HIST_KEY='bf_history';
+const KEY_STORE='bf_apikey';
+const BAKED_KEY='AIzaSyB-lxCbv5hen7Fxnz46mqyWR_zvGww4cAk';
+let BIZ=[], CSV_DATA='', EF=false;
+
+// ── Nav ───────────────────────────────────────────────────────────────────────
+function goTab(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  document.getElementById('scroll').scrollTop=0;
+  if(id==='history')renderHist();
+  if(id==='settings')loadSettings();
+}
+function goSettings(){goTab('settings')}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function setQ(v){document.getElementById('biz-type').value=v}
+function setL(v){document.getElementById('location').value=v}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function stars(r){if(!r)return'';const f=Math.floor(r),h=(r%1)>=.5?1:0,e=5-f-h;return'★'.repeat(f)+(h?'½':'')+'☆'.repeat(e)}
+function toast(m='Copied!'){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+
+function setP(pct,main,sub=''){
+  document.getElementById('pw').classList.add('vis');
+  document.getElementById('pf').style.width=Math.min(pct,100)+'%';
+  document.getElementById('pp').textContent=Math.round(Math.min(pct,100))+'%';
+  document.getElementById('pt').textContent=main;
+  document.getElementById('ps').textContent=sub;
+}
+function hideP(){document.getElementById('pw').classList.remove('vis')}
+function setSt(m,s=true){document.getElementById('st').textContent=m;document.getElementById('sb').classList.toggle('vis',s)}
+function showErr(m){document.getElementById('err').innerHTML=m;document.getElementById('err').classList.add('vis');setSt('',false);hideP()}
+function clearErr(){document.getElementById('err').classList.remove('vis')}
+
+// ── API Key management (localStorage) ─────────────────────────────────────────
+function getKey(){return localStorage.getItem(KEY_STORE)||BAKED_KEY;}
+function checkKeyStatus(){document.getElementById('api-indicator').style.color='var(--green)';}
+function loadSettings(){
+  const k=getKey();
+  document.getElementById('api-key-inp').value=k;
+  updateKeyBadge(!!k);
+  const prefs=JSON.parse(localStorage.getItem('bf_prefs')||'{}');
+  if(prefs.location)document.getElementById('def-loc').value=prefs.location;
+}
+function updateKeyBadge(ok){
+  document.getElementById('key-status-badge').innerHTML=ok
+    ?'<div class="key-status ks-ok">✓ API key saved — ready to use</div>'
+    :'<div class="key-status ks-none">✗ No API key — enter one above</div>';
+}
+function toggleKey(){
+  const inp=document.getElementById('api-key-inp');
+  const btn=event.target;
+  inp.type=inp.type==='password'?'text':'password';
+  btn.textContent=inp.type==='password'?'Show':'Hide';
+}
+function saveKey(){
+  const k=document.getElementById('api-key-inp').value.trim();
+  if(!k){document.getElementById('key-err-msg').textContent='Please enter an API key';document.getElementById('key-err-msg').classList.add('vis');return}
+  localStorage.setItem(KEY_STORE,k);
+  document.getElementById('key-saved-msg').textContent='✓ Key saved permanently in your browser';
+  document.getElementById('key-saved-msg').classList.add('vis');
+  document.getElementById('key-err-msg').classList.remove('vis');
+  updateKeyBadge(true);checkKeyStatus();
+  setTimeout(()=>document.getElementById('key-saved-msg').classList.remove('vis'),3000);
+}
+function savePrefs(){
+  const prefs={location:document.getElementById('def-loc').value};
+  localStorage.setItem('bf_prefs',JSON.stringify(prefs));
+  document.getElementById('prefs-saved').textContent='✓ Saved';
+  document.getElementById('prefs-saved').classList.add('vis');
+  setTimeout(()=>document.getElementById('prefs-saved').classList.remove('vis'),2000);
+}
+
+// ── Google Places (direct fetch with API key) ─────────────────────────────────
+// Note: Google Places API supports CORS from browsers when called directly
+async function gFetch(endpoint,params){
+  const key=getKey();
+  if(!key)throw new Error('NO_KEY');
+  params.key=key;
+  const url='https://maps.googleapis.com/maps/api/place/'+endpoint+'?'+new URLSearchParams(params);
+  const r=await fetch(url);
+  if(!r.ok)throw new Error('Network error '+r.status);
+  return r.json();
+}
+
+async function fetchPages(query){
+  let pl=[],tok=null,pg=0;
+  while(pg<3){
+    if(pg>0)await new Promise(r=>setTimeout(r,2200));
+    const p={query};if(tok)p.pagetoken=tok;
+    const d=await gFetch('textsearch/json',p);
+    if(d.status==='REQUEST_DENIED')throw new Error('API key denied. Check Places API is enabled.');
+    if(d.status==='ZERO_RESULTS'||d.status!=='OK')break;
+    pl=pl.concat(d.results||[]);tok=d.next_page_token||null;pg++;if(!tok)break;
+  }
+  return pl;
+}
+
+function buildZones(bt,loc,max){
+  const n=max<=60?1:max<=120?2:max<=200?4:max<=500?8:12;
+  const d=['North','South','East','West','Central','Northwest','Northeast','Southwest'];
+  const q=[`${bt} in ${loc}`];
+  for(let i=0;i<Math.min(n-1,d.length);i++)q.push(`${bt} in ${d[i]} ${loc}`);
+  return q;
+}
+
+// ── Email scraping (via allorigins proxy for CORS) ─────────────────────────────
+async function scrapeEmail(url){
+  if(!url)return[];
+  const CONTACT=['/contact','/contact-us','/about','/about-us','/get-in-touch','/enquiry'];
+  const EMAIL_RE=/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
+  const BAD=['sentry','wixpress','example.com','noreply','no-reply','wordpress','squarespace','googletagmanager'];
+
+  function isGood(e){
+    e=e.toLowerCase();
+    return !BAD.some(b=>e.includes(b)) && e.length>6 && !e.match(/\.(png|jpg|gif|svg|css|js)$/);
+  }
+
+  async function tryFetch(u){
+    try{
+      // Use allorigins.win as CORS proxy (free, personal use)
+      const proxy='https://api.allorigins.win/get?url='+encodeURIComponent(u);
+      const r=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
+      const d=await r.json();
+      return d.contents||'';
+    }catch{return''}
+  }
+
+  if(!url.startsWith('http'))url='https://'+url;
+  const parsed=new URL(url);
+  const base=parsed.origin;
+
+  let html=await tryFetch(url);
+  let emails=(html.match(EMAIL_RE)||[]).filter(isGood);
+
+  if(!emails.length){
+    for(const path of CONTACT){
+      html=await tryFetch(base+path);
+      emails=(html.match(EMAIL_RE)||[]).filter(isGood);
+      if(emails.length)break;
+    }
+  }
+  return [...new Set(emails.map(e=>e.toLowerCase()))].slice(0,5);
+}
+
+// ── Main search ───────────────────────────────────────────────────────────────
+async function startSearch(){
+  clearErr();
+  
+  const bt=document.getElementById('biz-type').value.trim();
+  const loc=document.getElementById('location').value.trim();
+  const max=parseInt(document.getElementById('max-results').value);
+  const minR=parseFloat(document.getElementById('min-rating').value);
+  const doE=document.getElementById('do-emails').checked;
+  if(!bt)return showErr('Please enter a business type.');
+  if(!loc)return showErr('Please enter a location.');
+
+  document.getElementById('search-btn').disabled=true;
+  document.getElementById('results-section').style.display='none';
+
+  try{
+    const zones=buildZones(bt,loc,max);
+    const seen=new Set();let all=[];
+    for(let qi=0;qi<zones.length;qi++){
+      setP((qi/zones.length)*35,`Zone ${qi+1}/${zones.length}: Searching...`,zones[qi]);
+      try{const zp=await fetchPages(zones[qi]);for(const p of zp){if(!seen.has(p.place_id)){seen.add(p.place_id);all.push(p)}}}catch(e){if(e.message==='NO_KEY'||e.message.includes('denied'))throw e;console.warn(e)}
+      if(all.length>=max)break;
+    }
+    if(minR>0)all=all.filter(p=>(p.rating||0)>=minR);
+    all=all.slice(0,max);
+    if(!all.length)throw new Error('No businesses found. Try different terms or location.');
+
+    BIZ=[];
+    for(let i=0;i<all.length;i++){
+      setP(35+((i/all.length)*30),`Getting details: ${i+1}/${all.length}...`,all[i].name||'');
+      const p=all[i];let det={};
+      try{const dr=await gFetch('details/json',{place_id:p.place_id,fields:'name,formatted_address,formatted_phone_number,website,rating,user_ratings_total,opening_hours,url'});det=dr.result||{}}catch(_){}
+      BIZ.push({name:det.name||p.name||'',address:det.formatted_address||p.formatted_address||'',phone:det.formatted_phone_number||'',website:det.website||'',rating:det.rating||p.rating||'',reviews:det.user_ratings_total||p.user_ratings_total||'',open_now:det.opening_hours?.open_now??p.opening_hours?.open_now,maps_url:det.url||`https://www.google.com/maps/place/?q=place_id:${p.place_id}`,emails:[],es:doE?'pending':'skipped'});
+    }
+
+    renderResults();
+    setSt('',false);hideP();
+
+    // Save history
+    const h=JSON.parse(localStorage.getItem(HIST_KEY)||'[]');
+    h.unshift({id:Date.now(),query:bt,location:loc,count:BIZ.length,date:new Date().toISOString(),data:JSON.stringify(BIZ)});
+    localStorage.setItem(HIST_KEY,JSON.stringify(h.slice(0,30)));
+
+    // Email scrape
+    if(doE){
+      let ef=0;
+      for(let i=0;i<BIZ.length;i++){
+        const b=BIZ[i];
+        if(!b.website){b.es='none';updCard(i);continue}
+        b.es='scraping';updCard(i);
+        setP((i/BIZ.length)*100,`Scraping emails: ${i+1}/${BIZ.length}...`,b.name);
+        try{b.emails=await scrapeEmail(b.website);b.es=b.emails.length>0?'found':'none';if(b.emails.length>0)ef++;}catch{b.es='none'}
+        updCard(i);
+        document.getElementById('rc-email').textContent=ef+' email'+(ef===1?'':'s');
+        if(ef>0)document.getElementById('rc-email').classList.add('vis');
+        buildCSV();
+      }
+      setSt('',false);
+      setP(100,`Done! ${ef} emails found across ${BIZ.length} businesses.`);
+      setTimeout(hideP,2500);
+      // update history with emails
+      const h2=JSON.parse(localStorage.getItem(HIST_KEY)||'[]');
+      if(h2[0])h2[0].data=JSON.stringify(BIZ);
+      localStorage.setItem(HIST_KEY,JSON.stringify(h2));
+    }
+  }catch(e){showErr('Error: '+e.message)}
+  document.getElementById('search-btn').disabled=false;
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function cardHTML(b,i){
+  const rh=b.rating?`<span class="biz-stars">${stars(b.rating)}</span> <strong>${b.rating}</strong> (${Number(b.reviews||0).toLocaleString()})`:'';
+  const oh=b.open_now===true?'<span class="chip open-chip">Open</span>':b.open_now===false?'<span class="chip closed-chip">Closed</span>':'';
+  let eh='';
+  if(b.es==='pending')eh='<div class="scraping-ind"><div class="mini-spin"></div>Waiting...</div>';
+  else if(b.es==='scraping')eh='<div class="scraping-ind"><div class="mini-spin"></div>Scraping...</div>';
+  else if(b.emails&&b.emails.length>0)eh=`<div class="email-chips">${b.emails.map(e=>`<a href="mailto:${esc(e)}" class="echip">✉ ${esc(e)}</a>`).join('')}</div>`;
+  else if(b.es==='none')eh=`<div class="no-email">${b.website?'No email found':'No website'}</div>`;
+  const he=b.emails&&b.emails.length>0;
+  return`<div class="biz-card${he?' has-email':''}" id="bc${i}" data-he="${he}" data-num="${i+1}">
+    <div class="biz-name">${esc(b.name)} ${oh}</div>
+    ${b.address?`<div class="biz-addr">📍 ${esc(b.address)}</div>`:''}
+    <div class="biz-meta">${b.phone?'📞 '+esc(b.phone):''}${rh?'&nbsp;'+rh:''}</div>
+    <div class="email-area" id="ea${i}">${eh}</div>
+    <div class="biz-actions">
+      <a href="${esc(b.maps_url)}" target="_blank" class="bact ba-maps">Maps ↗</a>
+      ${b.phone?`<a href="tel:${esc(b.phone)}" class="bact ba-call">Call</a>`:'<span class="bact ba-dis">No phone</span>'}
+      ${b.website?`<a href="${esc(b.website)}" target="_blank" class="bact ba-web">Website ↗</a>`:''}
+    </div>
+  </div>`;
+}
+
+function updCard(i){
+  const b=BIZ[i],area=document.getElementById('ea'+i),card=document.getElementById('bc'+i);
+  if(!area)return;
+  if(b.emails&&b.emails.length>0)card.classList.add('has-email');
+  card.dataset.he=b.emails&&b.emails.length>0;
+  let eh='';
+  if(b.es==='scraping')eh='<div class="scraping-ind"><div class="mini-spin"></div>Scraping...</div>';
+  else if(b.emails&&b.emails.length>0)eh=`<div class="email-chips">${b.emails.map(e=>`<a href="mailto:${esc(e)}" class="echip">✉ ${esc(e)}</a>`).join('')}</div>`;
+  else if(b.es==='none')eh=`<div class="no-email">${b.website?'No email found':'No website'}</div>`;
+  area.innerHTML=eh;
+}
+
+function renderResults(){
+  document.getElementById('rc-total').textContent=BIZ.length+' results';
+  document.getElementById('biz-list').innerHTML=BIZ.map((b,i)=>cardHTML(b,i)).join('');
+  buildCSV();
+  document.getElementById('results-section').style.display='block';
+  document.getElementById('scroll').scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── CSV ───────────────────────────────────────────────────────────────────────
+function buildCSV(){
+  const h=['Name','Address','Phone','Email(s)','Website','Rating','Reviews','Google Maps URL'];
+  const rows=BIZ.map(b=>[b.name,b.address,b.phone,(b.emails||[]).join(' | '),b.website,b.rating,b.reviews,b.maps_url].map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(','));
+  CSV_DATA=[h.join(','),...rows].join('\n');
+}
+function cpCSV(){if(!CSV_DATA)return;navigator.clipboard.writeText(CSV_DATA).then(()=>toast('CSV copied to clipboard!'))}
+function dlCSV(){
+  if(!CSV_DATA)return;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([CSV_DATA],{type:'text/csv'}));
+  a.download='bizfinder.csv';a.click();
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
+function renderHist(){
+  const h=JSON.parse(localStorage.getItem(HIST_KEY)||'[]');
+  const c=document.getElementById('hist-container');
+  if(!h.length){c.innerHTML='<div class="empty-state"><div class="empty-icon">🕐</div><p>No history yet.<br>Run a search to see it here.</p></div>';return}
+  c.innerHTML=h.map((item,i)=>`<div class="hist-item" onclick="loadHist(${i})">
+    <h4>${esc(item.query)}</h4>
+    <p>📍 ${esc(item.location)}</p>
+    <div class="hist-meta"><span class="hist-count">${item.count} results</span><span class="hist-date">${new Date(item.date).toLocaleDateString()}</span></div>
+  </div>`).join('')+'<button onclick="clearHist()" style="width:100%;margin-top:12px;padding:12px;background:transparent;border:1px solid var(--border);border-radius:12px;color:#ff8070;font-family:var(--mono);font-size:11px;cursor:pointer">Clear History</button>';
+}
+function loadHist(i){
+  const h=JSON.parse(localStorage.getItem(HIST_KEY)||'[]');
+  const item=h[i];if(!item)return;
+  BIZ=JSON.parse(item.data||'[]');
+  goTab('search');
+  document.getElementById('biz-type').value=item.query;
+  document.getElementById('location').value=item.location;
+  renderResults();buildCSV();
+}
+function clearHist(){if(confirm('Clear all history?')){localStorage.removeItem(HIST_KEY);renderHist()}}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+// Pre-load API key
+if(!localStorage.getItem(KEY_STORE))localStorage.setItem(KEY_STORE,'AIzaSyB-lxCbv5hen7Fxnz46mqyWR_zvGww4cAk');
+checkKeyStatus();
+const prefs=JSON.parse(localStorage.getItem('bf_prefs')||'{}');
+if(prefs.location)document.getElementById('location').value=prefs.location;
+</script>
+</body>
+</html>
