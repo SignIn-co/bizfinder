@@ -358,6 +358,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 
     <div class="status-row" id="sb"><div class="spin"></div><span id="st"></span></div>
     <div class="alert alert-err" id="err"></div>
+    <div id="debug-info" style="display:none;margin-top:8px;padding:10px;background:#1a1a1a;border-radius:8px;font-family:var(--mono);font-size:10px;color:#888;line-height:1.6;word-break:break-all"></div>
+    <button id="debug-btn" onclick="runDiagnostic()" style="display:none;margin-top:8px;width:100%;padding:10px;background:#1E1E23;border:1px solid #2A2A30;border-radius:8px;font-family:var(--mono);font-size:11px;color:#666;cursor:pointer">🔍 Run Diagnostic Test</button>
     <div class="alert" id="no-key-warn" style="display:none!important" style="background:rgba(255,77,46,.1);border:1px solid rgba(255,77,46,.3);color:#ff8070">
       ⚠ No API key set. <strong onclick="goSettings()" style="cursor:pointer;text-decoration:underline">Tap here to add it in Settings.</strong>
     </div>
@@ -539,7 +541,7 @@ function setP(pct,main,sub=''){
 }
 function hideP(){document.getElementById('pw').classList.remove('vis')}
 function setSt(m,s=true){document.getElementById('st').textContent=m;document.getElementById('sb').classList.toggle('vis',s)}
-function showErr(m){document.getElementById('err').innerHTML=m;document.getElementById('err').classList.add('vis');setSt('',false);hideP()}
+function showErr(m){document.getElementById('err').innerHTML=m;document.getElementById('err').classList.add('vis');setSt('',false);hideP();document.getElementById('debug-btn').style.display='';}
 function clearErr(){document.getElementById('err').classList.remove('vis')}
 
 // ── API Key management (localStorage) ─────────────────────────────────────────
@@ -875,7 +877,18 @@ async function startSearch(){
     const seen=new Set();let all=[];
     for(let qi=0;qi<zones.length;qi++){
       setP((qi/zones.length)*35,`Zone ${qi+1}/${zones.length}: Searching...`,zones[qi]);
-      try{const zp=await fetchPages(zones[qi]);for(const p of zp){if(!seen.has(p.place_id)){seen.add(p.place_id);all.push(p)}}}catch(e){if(e.message==='NO_KEY'||e.message.includes('denied'))throw e;console.warn(e)}
+      try{
+        const zp=await fetchPages(zones[qi]);
+        for(const p of zp){if(!seen.has(p.place_id)){seen.add(p.place_id);all.push(p)}}
+      }catch(e){
+        // Show the real error — don't swallow it
+        if(e.message==='NO_KEY'||e.message.includes('denied')||e.message.includes('proxies failed')){
+          throw e; // surface immediately
+        }
+        // For other errors on multi-zone, show in progress but keep going
+        setP((qi/zones.length)*35,'Zone '+(qi+1)+'/'+zones.length+' failed: '+e.message.slice(0,60),zones[qi]);
+        await new Promise(r=>setTimeout(r,500));
+      }
       if(all.length>=max)break;
     }
     if(minR>0)all=all.filter(p=>(p.rating||0)>=minR);
@@ -1279,6 +1292,71 @@ function setupAC(inputId,suggestions,dropId){
 // Init
 setupAC('location',LOC_SUGG,'loc-drop');
 setupAC('biz-type',BIZ_SUGG,'biz-drop');
+
+
+// ── Diagnostic ────────────────────────────────────────────────────────────
+async function runDiagnostic(){
+  const btn = document.getElementById('debug-btn');
+  const info = document.getElementById('debug-info');
+  btn.textContent = '⏳ Testing...';
+  btn.disabled = true;
+  info.style.display = 'block';
+  info.textContent = 'Running diagnostic...\n';
+
+  const key = getKey();
+  const testUrl = 'https://maps.googleapis.com/maps/api/place/textsearch/json?query=coffee+in+Auckland&key=' + key;
+  
+  const tests = [
+    {name: 'Direct fetch', fn: async () => {
+      const r = await fetch(testUrl, {signal: AbortSignal.timeout(8000), mode: 'cors'});
+      return await r.json();
+    }},
+    {name: 'corsproxy.io', fn: async () => {
+      const r = await fetch('https://corsproxy.io/?' + encodeURIComponent(testUrl), {signal: AbortSignal.timeout(10000)});
+      return JSON.parse(await r.text());
+    }},
+    {name: 'allorigins.win', fn: async () => {
+      const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(testUrl), {signal: AbortSignal.timeout(10000)});
+      const d = await r.json();
+      return JSON.parse(d.contents);
+    }},
+    {name: 'codetabs.com', fn: async () => {
+      const r = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(testUrl), {signal: AbortSignal.timeout(10000)});
+      return JSON.parse(await r.text());
+    }},
+  ];
+
+  let log = 'API Key: ' + key.slice(0,12) + '...\n\n';
+  
+  for(const test of tests){
+    try{
+      log += '⏳ Testing ' + test.name + '...\n';
+      info.textContent = log;
+      const data = await test.fn();
+      const status = data ? data.status : 'NO_DATA';
+      const count = data && data.results ? data.results.length : 0;
+      if(status === 'OK'){
+        log += '✅ ' + test.name + ': OK — ' + count + ' results found\n\n';
+        info.textContent = log;
+        info.style.color = '#22C55E';
+        log += 'SUCCESS! This proxy works.\nThe app should work now. Try searching again.';
+        info.textContent = log;
+        break;
+      } else {
+        log += '⚠️ ' + test.name + ': Google returned status=' + status + '\n';
+        if(data && data.error_message) log += '   Error: ' + data.error_message + '\n';
+        log += '\n';
+        info.textContent = log;
+      }
+    }catch(e){
+      log += '❌ ' + test.name + ': ' + e.message + '\n\n';
+      info.textContent = log;
+    }
+  }
+  
+  btn.textContent = '🔍 Run Diagnostic Test';
+  btn.disabled = false;
+}
 
 // ── Stop scraping ─────────────────────────────────────────────────────────
 function stopScraping(){
