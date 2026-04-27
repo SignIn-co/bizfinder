@@ -572,43 +572,87 @@ function buildZones(bt,loc,max){
 // ── Email scraping (via allorigins proxy for CORS) ─────────────────────────────
 async function scrapeEmail(url){
   if(!url)return[];
-  const CONTACT=['/contact','/contact-us','/about','/about-us','/get-in-touch','/enquiry'];
+  if(!url.startsWith('http'))url='https://'+url;
+
   const EMAIL_RE=/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
-  const BAD=['sentry','wixpress','example.com','noreply','no-reply','wordpress','squarespace','googletagmanager'];
+  const BAD=['sentry','wixpress','example.com','noreply','no-reply','donotreply',
+    'wordpress.com','squarespace.com','googletagmanager','google.com',
+    'facebook.com','instagram.com','twitter.com','tiktok.com',
+    'schema.org','jquery','cloudflare','amazonaws','gravatar'];
 
   function isGood(e){
-    e=e.toLowerCase();
-    return !BAD.some(b=>e.includes(b)) && e.length>6 && !e.match(/\.(png|jpg|gif|svg|css|js)$/);
+    e=e.toLowerCase().replace(/[.,;:)>'"]+$/,'');
+    if(e.length<6)return false;
+    if(!e.includes('@'))return false;
+    const[pre,dom]=e.split('@');
+    if(!dom||dom.length<4)return false;
+    if(pre.length<2)return false;
+    if(BAD.some(b=>e.includes(b)))return false;
+    if(/\.(png|jpg|gif|svg|css|js|woff|ttf|eot|map|ico)$/i.test(dom))return false;
+    if(/\.\./.test(e))return false;
+    return true;
   }
 
-  async function tryFetch(u){
+  function extractEmails(text){
+    if(!text)return[];
+    // decode HTML entities
+    text=text.replace(/&amp;/g,'&').replace(/&#64;/g,'@').replace(/&#x40;/g,'@').replace(/\\u0040/g,'@');
+    // find mailto links first (most reliable)
+    const mailto=[...text.matchAll(/mailto:([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/gi)].map(m=>m[1]);
+    // then scan all text
+    const found=(text.match(EMAIL_RE)||[]);
+    const all=[...mailto,...found].map(e=>e.toLowerCase().replace(/[.,;:)>'"]+$/,''));
+    return[...new Set(all)].filter(isGood).slice(0,5);
+  }
+
+  // Multiple CORS proxies to try in order
+  const PROXIES=[
+    u=>`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+    u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
+    u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+  ];
+
+  async function tryProxy(targetUrl, proxyFn){
     try{
-      // Use allorigins.win as CORS proxy (free, personal use)
-      const proxy='https://api.allorigins.win/get?url='+encodeURIComponent(u);
-      const r=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
-      const d=await r.json();
-      return d.contents||'';
+      const r=await fetch(proxyFn(targetUrl),{signal:AbortSignal.timeout(9000)});
+      if(!r.ok)return'';
+      const ct=r.headers.get('content-type')||'';
+      if(ct.includes('application/json')){
+        const d=await r.json();
+        return d.contents||d.data||JSON.stringify(d);
+      }
+      return await r.text();
     }catch{return''}
   }
 
-  if(!url.startsWith('http'))url='https://'+url;
+  async function fetchPage(targetUrl){
+    for(const proxyFn of PROXIES){
+      const text=await tryProxy(targetUrl,proxyFn);
+      if(text&&text.length>200)return text;
+    }
+    return'';
+  }
+
   const parsed=new URL(url);
   const base=parsed.origin;
+  const CONTACT_PAGES=[
+    url, // homepage first
+    base+'/contact',base+'/contact-us',base+'/contactus',
+    base+'/about',base+'/about-us',
+    base+'/get-in-touch',base+'/enquiry',base+'/enquiries',
+    base+'/reach-us',base+'/our-team',base+'/team',
+    base+'/info',base+'/find-us',
+  ];
 
-  let html=await tryFetch(url);
-  let emails=(html.match(EMAIL_RE)||[]).filter(isGood);
-
-  if(!emails.length){
-    for(const path of CONTACT){
-      html=await tryFetch(base+path);
-      emails=(html.match(EMAIL_RE)||[]).filter(isGood);
-      if(emails.length)break;
-    }
+  for(const page of CONTACT_PAGES){
+    const text=await fetchPage(page);
+    const emails=extractEmails(text);
+    if(emails.length>0)return emails;
   }
-  return [...new Set(emails.map(e=>e.toLowerCase()))].slice(0,5);
+  return[];
 }
 
-// ── Main search ───────────────────────────────────────────────────────────────
+// ── Main search// ── Main search ───────────────────────────────────────────────────────────────
 async function startSearch(){
   clearErr();
   
