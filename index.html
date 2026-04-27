@@ -238,22 +238,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:99;
 }
 .share-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-.ac-wrap{position:relative}
-.ac-drop{display:none;position:absolute;left:0;right:0;background:#1E1E23;border:1px solid #2A2A30;border-radius:10px;margin-top:4px;max-height:200px;overflow-y:auto;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.5)}
-.ac-item{padding:11px 14px;font-size:14px;font-weight:500;cursor:pointer;transition:background .1s;border-bottom:1px solid #2A2A30;color:#F0EEE8}
-.ac-item:last-child{border-bottom:none}
-.ac-item:active,.ac-item:hover{background:#3D7EFF;color:#fff}
-.geo-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:#3D7EFF;color:#fff;border:none;border-radius:8px;padding:5px 9px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'DM Mono',monospace;letter-spacing:.3px}
-.zone-tag{background:rgba(61,126,255,.1)!important;border-color:rgba(61,126,255,.3)!important;color:#90b4ff!important}
-.zone-tag:active{background:#3D7EFF!important;color:#fff!important}
-
-.filter-bar{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:10px}
-.filter-row{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
-.filter-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-right:2px}
-.fbtn{font-family:var(--mono);font-size:11px;font-weight:500;padding:5px 10px;border-radius:6px;background:var(--card2);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
-.fbtn:active{transform:scale(.95)}
-.fbtn.active{background:var(--accent);border-color:var(--accent);color:#fff}
 </style>
 </head>
 <body>
@@ -299,12 +283,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 
     <div class="field">
       <label class="field-label">Location</label>
-      <div class="ac-wrap">
-        <input type="text" id="location" placeholder="Auckland NZ, Sydney AU..." autocomplete="off" style="padding-right:120px"/>
-        <button class="geo-btn" id="geo-btn" onclick="useMyLocation()">📍 My Location</button>
-        <div id="loc-drop" class="ac-drop"></div>
-      </div>
-      <div class="tags-scroll" id="loc-tags">
+      <input type="text" id="location" placeholder="Auckland NZ, Sydney AU..." autocomplete="off"/>
+      <div class="tags-scroll">
         <span class="qtag" onclick="setL('Auckland NZ')">Auckland</span>
         <span class="qtag" onclick="setL('Wellington NZ')">Wellington</span>
         <span class="qtag" onclick="setL('Christchurch NZ')">Christchurch</span>
@@ -320,8 +300,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <div class="field" style="margin-bottom:0">
         <label class="field-label">Results</label>
         <select id="max-results">
-          <option value="20" selected>Up to 20</option>
-          <option value="60">Up to 60</option>
+          <option value="20">Up to 20</option>
+          <option value="60" selected>Up to 60</option>
           <option value="120">Up to 120</option>
           <option value="200">Up to 200</option>
         </select>
@@ -369,32 +349,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
           <span class="rc rc-email" id="rc-email">0 emails</span>
         </div>
         <div class="export-btns">
-          <button class="exp-btn" id="stop-btn" onclick="stopScraping()" style="display:none;background:rgba(255,77,46,.15);border-color:rgba(255,77,46,.4);color:#ff6b55">⏹ Stop</button>
           <button class="exp-btn" onclick="cpCSV()">Copy CSV</button>
           <button class="exp-btn" onclick="dlCSV()">↓ CSV</button>
-        </div>
-      </div>
-      <!-- FILTER BAR -->
-      <div class="filter-bar" id="filter-bar" style="display:none">
-        <div class="filter-row">
-          <button class="fbtn active" id="f-all" onclick="applyFilter('all')">All</button>
-          <button class="fbtn" id="f-email" onclick="applyFilter('email')">📧 Has Email</button>
-          <button class="fbtn" id="f-phone" onclick="applyFilter('phone')">📞 Has Phone</button>
-          <button class="fbtn" id="f-web" onclick="applyFilter('web')">🌐 Has Website</button>
-          <button class="fbtn" id="f-open" onclick="applyFilter('open')">🟢 Open Now</button>
-          <button class="fbtn" id="f-noemail" onclick="applyFilter('noemail')">No Email</button>
-        </div>
-        <div class="filter-row" style="margin-top:6px">
-          <span class="filter-label">Min Rating:</span>
-          <button class="fbtn" id="fr-any" onclick="applyRating(0)" style="font-size:10px">Any</button>
-          <button class="fbtn" id="fr-3" onclick="applyRating(3)" style="font-size:10px">3★+</button>
-          <button class="fbtn" id="fr-4" onclick="applyRating(4)" style="font-size:10px">4★+</button>
-          <button class="fbtn" id="fr-45" onclick="applyRating(4.5)" style="font-size:10px">4.5★+</button>
-          <span style="margin-left:8px" class="filter-label">Sort:</span>
-          <button class="fbtn" id="fs-def" onclick="applySort('default')" style="font-size:10px">Default</button>
-          <button class="fbtn" id="fs-rating" onclick="applySort('rating')" style="font-size:10px">Rating ↓</button>
-          <button class="fbtn" id="fs-name" onclick="applySort('name')" style="font-size:10px">A–Z</button>
-          <button class="fbtn" id="fs-reviews" onclick="applySort('reviews')" style="font-size:10px">Reviews ↓</button>
         </div>
       </div>
       <div class="biz-list" id="biz-list"></div>
@@ -505,7 +461,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 const HIST_KEY='bf_history';
 const KEY_STORE='bf_apikey';
 const BAKED_KEY='AIzaSyB-lxCbv5hen7Fxnz46mqyWR_zvGww4cAk';
-let BIZ=[], CSV_DATA='', EF=false, STOP_SCRAPE=false, ACTIVE_FILTER='all', ACTIVE_RATING=0, ACTIVE_SORT='default';
+let BIZ=[], CSV_DATA='', EF=false;
 
 // ── Nav ───────────────────────────────────────────────────────────────────────
 function goTab(id){
@@ -521,11 +477,7 @@ function goSettings(){goTab('settings')}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function setQ(v){document.getElementById('biz-type').value=v}
-function setL(v){
-  document.getElementById('location').value=v;
-  updateLocTags(v);
-  const d=document.getElementById('loc-drop');if(d)d.style.display='none';
-}
+function setL(v){document.getElementById('location').value=v}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function stars(r){if(!r)return'';const f=Math.floor(r),h=(r%1)>=.5?1:0,e=5-f-h;return'★'.repeat(f)+(h?'½':'')+'☆'.repeat(e)}
 function toast(m='Copied!'){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
@@ -587,21 +539,15 @@ async function gFetch(endpoint,params){
   const key=getKey();
   if(!key)throw new Error('NO_KEY');
   params.key=key;
+  // Use allorigins proxy to bypass CORS restrictions
   const googleUrl='https://maps.googleapis.com/maps/api/place/'+endpoint+'?'+new URLSearchParams(params);
-  const GPROXIES=['https://api.allorigins.win/get?url=','https://corsproxy.io/?','https://api.codetabs.com/v1/proxy?quest='];
-  for(const proxy of GPROXIES){
-    try{
-      const r=await fetch(proxy+encodeURIComponent(googleUrl),{signal:AbortSignal.timeout(12000)});
-      if(!r.ok)continue;
-      const ct=r.headers.get('content-type')||'';
-      let data;
-      if(ct.includes('application/json')){const w=await r.json();const raw=w.contents||w.data||null;if(!raw)continue;data=JSON.parse(raw);}
-      else{data=JSON.parse(await r.text());}
-      if(data&&data.status)return data;
-    }catch(e){continue;}
-  }
-  throw new Error('All proxies failed. Check your internet connection.');
+  const proxyUrl='https://api.allorigins.win/get?url='+encodeURIComponent(googleUrl);
+  const r=await fetch(proxyUrl,{signal:AbortSignal.timeout(15000)});
+  if(!r.ok)throw new Error('Network error '+r.status);
+  const wrapper=await r.json();
+  return JSON.parse(wrapper.contents);
 }
+
 async function fetchPages(query){
   let pl=[],tok=null,pg=0;
   while(pg<3){
@@ -629,187 +575,80 @@ async function scrapeEmail(url){
   if(!url.startsWith('http'))url='https://'+url;
 
   const EMAIL_RE=/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
-  const BAD=[
-    'sentry','wixpress','example.com','noreply','no-reply','donotreply',
+  const BAD=['sentry','wixpress','example.com','noreply','no-reply','donotreply',
     'wordpress.com','squarespace.com','googletagmanager','google.com',
-    'facebook.com','instagram.com','twitter.com','tiktok.com','linkedin.com',
-    'schema.org','jquery','cloudflare','amazonaws','gravatar','wix.com',
-    'parastorage.com','editmysite.com','weebly.com','shopify.com',
-    'myshopify.com','webflow.io','netlify.app','github.io',
-    'zendesk','intercom','mailchimp','sendgrid','hubspot',
-  ];
+    'facebook.com','instagram.com','twitter.com','tiktok.com',
+    'schema.org','jquery','cloudflare','amazonaws','gravatar'];
 
   function isGood(e){
-    e=e.toLowerCase().replace(/[.,;:)>'"\s]+$/,'');
-    if(e.length<6||!e.includes('@'))return false;
-    const parts=e.split('@');
-    if(parts.length!==2)return false;
-    const pre=parts[0],dom=parts[1];
-    if(!dom||dom.length<4||pre.length<2)return false;
+    e=e.toLowerCase().replace(/[.,;:)>'"]+$/,'');
+    if(e.length<6)return false;
+    if(!e.includes('@'))return false;
+    const[pre,dom]=e.split('@');
+    if(!dom||dom.length<4)return false;
+    if(pre.length<2)return false;
     if(BAD.some(b=>e.includes(b)))return false;
-    if(/\.(png|jpg|gif|svg|css|js|woff|ttf|eot|map|ico|json)$/i.test(dom))return false;
+    if(/\.(png|jpg|gif|svg|css|js|woff|ttf|eot|map|ico)$/i.test(dom))return false;
     if(/\.\./.test(e))return false;
     return true;
   }
 
   function extractEmails(text){
-    if(!text||text.length<100)return[];
-    // decode many obfuscation methods sites use
-    text=text
-      .replace(/&amp;/g,'&')
-      .replace(/&#64;/g,'@').replace(/&#x40;/g,'@')
-      .replace(/\\u0040/g,'@').replace(/%40/g,'@')
-      .replace(/\[at\]/gi,'@').replace(/\(at\)/gi,'@')
-      .replace(/\s+\[?at\]?\s+/gi,'@')
-      .replace(/\\@/g,'@');
-    // mailto: links are most reliable
+    if(!text)return[];
+    // decode HTML entities
+    text=text.replace(/&amp;/g,'&').replace(/&#64;/g,'@').replace(/&#x40;/g,'@').replace(/\\u0040/g,'@');
+    // find mailto links first (most reliable)
     const mailto=[...text.matchAll(/mailto:([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/gi)].map(m=>m[1]);
+    // then scan all text
     const found=(text.match(EMAIL_RE)||[]);
-    const all=[...mailto,...found].map(e=>e.toLowerCase().replace(/[.,;:)>'"\]]+$/,''));
+    const all=[...mailto,...found].map(e=>e.toLowerCase().replace(/[.,;:)>'"]+$/,''));
     return[...new Set(all)].filter(isGood).slice(0,5);
   }
 
-  const parsed=new URL(url);
-  const base=parsed.origin;
-  const hostname=parsed.hostname;
-  const domain=hostname.replace('www.','');
-  const brand=domain.split('.')[0];
+  // Multiple CORS proxies to try in order
+  const PROXIES=[
+    u=>`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+    u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
+    u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+  ];
 
-  // ── PROXY FUNCTIONS ────────────────────────────────────────────────────────
-  // Each returns full page text or empty string
-
-  async function tryFetch(proxyUrl){
+  async function tryProxy(targetUrl, proxyFn){
     try{
-      const r=await fetch(proxyUrl,{signal:AbortSignal.timeout(10000)});
+      const r=await fetch(proxyFn(targetUrl),{signal:AbortSignal.timeout(9000)});
       if(!r.ok)return'';
       const ct=r.headers.get('content-type')||'';
       if(ct.includes('application/json')){
         const d=await r.json();
-        // allorigins wraps in {contents:...}, codetabs returns raw
-        return d.contents||d.data||d.body||JSON.stringify(d);
+        return d.contents||d.data||JSON.stringify(d);
       }
       return await r.text();
-    }catch{return'';}
+    }catch{return''}
   }
 
-  // Proxy 1: allorigins (good for static sites)
-  async function allorigins(u){
-    return tryFetch('https://api.allorigins.win/get?url='+encodeURIComponent(u));
-  }
-
-  // Proxy 2: corsproxy.io
-  async function corsproxyio(u){
-    return tryFetch('https://corsproxy.io/?'+encodeURIComponent(u));
-  }
-
-  // Proxy 3: codetabs
-  async function codetabs(u){
-    return tryFetch('https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u));
-  }
-
-  // Proxy 4: Google Cache — fetches Google's RENDERED version of any page
-  // This is the key fix for Wix/Squarespace/JS sites — Google stores the
-  // fully rendered HTML after executing all JavaScript
-  async function googleCache(u){
-    const cacheUrl='https://webcache.googleusercontent.com/search?q=cache:'+encodeURIComponent(u);
-    const text=await tryFetch('https://api.allorigins.win/get?url='+encodeURIComponent(cacheUrl));
-    return text;
-  }
-
-  // Proxy 5: Bing cache — same idea, different crawler
-  async function bingCache(u){
-    const domain2=new URL(u).hostname;
-    const text=await tryFetch('https://api.allorigins.win/get?url='+encodeURIComponent('https://cc.bingj.com/cache.aspx?q='+encodeURIComponent(domain2)+'&url='+encodeURIComponent(u)));
-    return text;
-  }
-
-  // Proxy 6: DuckDuckGo cached version
-  async function ddgCache(u){
-    // DDG shows snippets that sometimes contain emails
-    const text=await tryFetch('https://api.allorigins.win/get?url='+encodeURIComponent('https://duckduckgo.com/?q='+encodeURIComponent('"@'+domain+'"'+'site:'+domain)+'&ia=web'));
-    return text;
-  }
-
-  // Try fetching a target page with all proxies until we get content
-  async function fetchWithAllProxies(targetUrl){
-    const methods=[allorigins,corsproxyio,codetabs,googleCache,bingCache];
-    for(const method of methods){
-      const text=await method(targetUrl);
-      if(text&&text.length>500){
-        const emails=extractEmails(text);
-        if(emails.length>0)return emails;
-      }
+  async function fetchPage(targetUrl){
+    for(const proxyFn of PROXIES){
+      const text=await tryProxy(targetUrl,proxyFn);
+      if(text&&text.length>200)return text;
     }
-    return[];
+    return'';
   }
 
-  // ── PAGE LIST ─────────────────────────────────────────────────────────────
-  // Ordered from most likely to have email to least
-  // Includes brand-specific paths (catches Wix custom URLs like /contact-woofland)
-  const PAGES=[
-    url,
-    base+'/contact',
-    base+'/contact-us',
-    base+'/contact-'+brand,      // Wix often uses /contact-brandname
-    base+'/'+brand+'-contact',
-    base+'/contactus',
-    base+'/contact_us',
-    base+'/get-in-touch',
-    base+'/reach-us',
-    base+'/enquiry',
-    base+'/enquiries',
-    base+'/about',
-    base+'/about-us',
-    base+'/about-'+brand,
-    base+'/aboutus',
-    base+'/our-team',
-    base+'/team',
-    base+'/staff',
-    base+'/info',
-    base+'/find-us',
-    base+'/location',
-    base+'/locations',
-    base+'/help',
-    base+'/support',
-    base+'/connect',
-    base+'/terms',
-    base+'/terms-conditions',
-    base+'/terms-and-conditions',
-    base+'/privacy',
-    base+'/privacy-policy',
-    base+'/careers',
-    base+'/jobs',
-    base+'/sitemap',
-    base+'/sitemap.xml',
-    // try without www
-    base.replace('://www.','://')+'/contact',
-    base.replace('://www.','://')+'/contact-'+brand,
-    // try with www if not already
-    base.replace('://','://www.')+'/contact',
+  const parsed=new URL(url);
+  const base=parsed.origin;
+  const CONTACT_PAGES=[
+    url, // homepage first
+    base+'/contact',base+'/contact-us',base+'/contactus',
+    base+'/about',base+'/about-us',
+    base+'/get-in-touch',base+'/enquiry',base+'/enquiries',
+    base+'/reach-us',base+'/our-team',base+'/team',
+    base+'/info',base+'/find-us',
   ];
 
-  // ── MAIN SCRAPING LOOP ────────────────────────────────────────────────────
-  for(const page of PAGES){
-    const emails=await fetchWithAllProxies(page);
-    if(emails.length>0)return emails;
-  }
-
-  // ── LAST RESORT: Search engine snippet ───────────────────────────────────
-  // Search Google for email address pattern on this domain
-  // Google returns plain text snippets that include emails even from JS sites
-  const searchQueries=[
-    'https://www.google.com/search?q='+encodeURIComponent('"@'+domain+'" contact'),
-    'https://www.google.com/search?q='+encodeURIComponent('email site:'+domain),
-  ];
-  for(const q of searchQueries){
-    const text=await allorigins(q);
+  for(const page of CONTACT_PAGES){
+    const text=await fetchPage(page);
     const emails=extractEmails(text);
-    // Filter to only emails matching this domain
-    const domainEmails=emails.filter(e=>e.includes('@'+domain)||e.includes('@'+domain.split('.')[0]));
-    if(domainEmails.length>0)return domainEmails;
     if(emails.length>0)return emails;
   }
-
   return[];
 }
 
@@ -859,14 +698,7 @@ async function startSearch(){
     // Email scrape
     if(doE){
       let ef=0;
-      STOP_SCRAPE=false;
-      document.getElementById('stop-btn').style.display='';
       for(let i=0;i<BIZ.length;i++){
-        if(STOP_SCRAPE){
-          // Mark remaining as skipped
-          for(let j=i;j<BIZ.length;j++){BIZ[j].es='none';updCard(j);}
-          break;
-        }
         const b=BIZ[i];
         if(!b.website){b.es='none';updCard(i);continue}
         b.es='scraping';updCard(i);
@@ -877,10 +709,8 @@ async function startSearch(){
         if(ef>0)document.getElementById('rc-email').classList.add('vis');
         buildCSV();
       }
-      document.getElementById('stop-btn').style.display='none';
       setSt('',false);
-      const stopMsg=STOP_SCRAPE?`Stopped. ${ef} emails found.`:`Done! ${ef} emails found across ${BIZ.length} businesses.`;
-      setP(100,stopMsg);
+      setP(100,`Done! ${ef} emails found across ${BIZ.length} businesses.`);
       setTimeout(hideP,2500);
       // update history with emails
       const h2=JSON.parse(localStorage.getItem(HIST_KEY)||'[]');
@@ -892,7 +722,7 @@ async function startSearch(){
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
-function cardHTML(b,i,displayNum){
+function cardHTML(b,i){
   const rh=b.rating?`<span class="biz-stars">${stars(b.rating)}</span> <strong>${b.rating}</strong> (${Number(b.reviews||0).toLocaleString()})`:'';
   const oh=b.open_now===true?'<span class="chip open-chip">Open</span>':b.open_now===false?'<span class="chip closed-chip">Closed</span>':'';
   let eh='';
@@ -901,7 +731,7 @@ function cardHTML(b,i,displayNum){
   else if(b.emails&&b.emails.length>0)eh=`<div class="email-chips">${b.emails.map(e=>`<a href="mailto:${esc(e)}" class="echip">✉ ${esc(e)}</a>`).join('')}</div>`;
   else if(b.es==='none')eh=`<div class="no-email">${b.website?'No email found':'No website'}</div>`;
   const he=b.emails&&b.emails.length>0;
-  return`<div class="biz-card${he?' has-email':''}" id="bc${i}" data-he="${he}" data-num="${displayNum||i+1}">
+  return`<div class="biz-card${he?' has-email':''}" id="bc${i}" data-he="${he}" data-num="${i+1}">
     <div class="biz-name">${esc(b.name)} ${oh}</div>
     ${b.address?`<div class="biz-addr">📍 ${esc(b.address)}</div>`:''}
     <div class="biz-meta">${b.phone?'📞 '+esc(b.phone):''}${rh?'&nbsp;'+rh:''}</div>
@@ -924,19 +754,11 @@ function updCard(i){
   else if(b.emails&&b.emails.length>0)eh=`<div class="email-chips">${b.emails.map(e=>`<a href="mailto:${esc(e)}" class="echip">✉ ${esc(e)}</a>`).join('')}</div>`;
   else if(b.es==='none')eh=`<div class="no-email">${b.website?'No email found':'No website'}</div>`;
   area.innerHTML=eh;
-  if(b.emails&&b.emails.length>0)card.classList.add('has-email');
-  card.dataset.he=b.emails&&b.emails.length>0;
 }
 
 function renderResults(){
-  ACTIVE_FILTER='all';ACTIVE_RATING=0;ACTIVE_SORT='default';
-  document.querySelectorAll('[id^="f-"],[id^="fr-"],[id^="fs-"]').forEach(function(b){b.classList.remove('active');});
-  const defaults=['f-all','fr-any','fs-def'];
-  defaults.forEach(function(id){const b=document.getElementById(id);if(b)b.classList.add('active');});
   document.getElementById('rc-total').textContent=BIZ.length+' results';
-  document.getElementById('biz-list').innerHTML=BIZ.map(function(b,i){return cardHTML(b,i,i+1);}).join('');
-  document.getElementById('filter-bar').style.display='';
-  document.getElementById('rc-email').style.display='none';
+  document.getElementById('biz-list').innerHTML=BIZ.map((b,i)=>cardHTML(b,i)).join('');
   buildCSV();
   document.getElementById('results-section').style.display='block';
   document.getElementById('scroll').scrollTo({top:0,behavior:'smooth'});
@@ -983,330 +805,7 @@ function clearHist(){if(confirm('Clear all history?')){localStorage.removeItem(H
 if(!localStorage.getItem(KEY_STORE))localStorage.setItem(KEY_STORE,'AIzaSyB-lxCbv5hen7Fxnz46mqyWR_zvGww4cAk');
 checkKeyStatus();
 const prefs=JSON.parse(localStorage.getItem('bf_prefs')||'{}');
-if(prefs.location){document.getElementById('location').value=prefs.location;updateLocTags(prefs.location);}
-
-// ── City zones map ────────────────────────────────────────────────────────
-const CITY_ZONES={
-  'Auckland NZ':['Auckland CBD NZ','North Shore NZ','South Auckland NZ','East Auckland NZ','West Auckland NZ','Manukau NZ','Waitakere NZ','Rodney NZ','Franklin NZ','Waiheke Island NZ'],
-  'Wellington NZ':['Wellington CBD NZ','Lower Hutt NZ','Upper Hutt NZ','Porirua NZ','Kapiti Coast NZ','Petone NZ','Johnsonville NZ','Miramar NZ'],
-  'Christchurch NZ':['Christchurch CBD NZ','Riccarton NZ','Papanui NZ','Sydenham NZ','Lyttelton NZ','Rangiora NZ','Rolleston NZ','Lincoln NZ'],
-  'Hamilton NZ':['Hamilton CBD NZ','Frankton NZ','Te Rapa NZ','Chartwell NZ','Rototuna NZ','Nawton NZ'],
-  'Tauranga NZ':['Tauranga CBD NZ','Mount Maunganui NZ','Papamoa NZ','Bethlehem NZ','Greerton NZ'],
-  'Sydney AU':['Sydney CBD AU','North Sydney AU','Inner West Sydney AU','Eastern Suburbs Sydney AU','Northern Beaches AU','Western Sydney AU','Parramatta AU','Penrith AU','Liverpool AU'],
-  'Melbourne AU':['Melbourne CBD AU','St Kilda AU','Fitzroy AU','Richmond AU','South Yarra AU','Brunswick AU','Footscray AU','Box Hill AU','Dandenong AU'],
-  'Brisbane AU':['Brisbane CBD AU','South Brisbane AU','Fortitude Valley AU','New Farm AU','Chermside AU','Indooroopilly AU','Logan AU','Ipswich AU'],
-  'Perth AU':['Perth CBD AU','Fremantle AU','Joondalup AU','Rockingham AU','Armadale AU','Midland AU','Mandurah AU'],
-  'Adelaide AU':['Adelaide CBD AU','Glenelg AU','Elizabeth AU','Salisbury AU','Morphett Vale AU'],
-  'London UK':['Central London UK','North London UK','South London UK','East London UK','West London UK','Camden UK','Shoreditch UK','Brixton UK','Greenwich UK'],
-  'Manchester UK':['Manchester City Centre UK','Salford UK','Stockport UK','Oldham UK','Bolton UK'],
-  'New York US':['Manhattan US','Brooklyn US','Queens US','The Bronx US','Staten Island US','Harlem US'],
-  'Los Angeles US':['Downtown LA US','Hollywood US','Santa Monica US','Venice Beach US','Pasadena US','Long Beach US'],
-  'Chicago US':['Chicago Loop US','Lincoln Park US','Wicker Park US','River North US','Hyde Park US'],
-  'Toronto CA':['Downtown Toronto CA','North York CA','Scarborough CA','Etobicoke CA','Mississauga CA','Brampton CA'],
-  'Vancouver CA':['Downtown Vancouver CA','Kitsilano CA','Commercial Drive CA','Surrey CA','Burnaby CA','Richmond CA'],
-  'Dublin IE':['Dublin City Centre IE','Ballsbridge IE','Dun Laoghaire IE','Swords IE','Tallaght IE'],
-  'Singapore SG':['Central Singapore SG','Orchard SG','Jurong SG','Tampines SG','Woodlands SG'],
-};
-
-const DEFAULT_LOC_TAGS=[
-  {label:'Auckland',val:'Auckland NZ'},{label:'Wellington',val:'Wellington NZ'},
-  {label:'Christchurch',val:'Christchurch NZ'},{label:'Sydney',val:'Sydney AU'},
-  {label:'Melbourne',val:'Melbourne AU'},{label:'Brisbane',val:'Brisbane AU'},
-  {label:'London',val:'London UK'},{label:'New York',val:'New York US'},
-];
-function updateLocTags(city){
-  const c=document.getElementById('loc-tags');
-  if(!c)return;
-  const zones=CITY_ZONES[city];
-  c.innerHTML='';
-  const items=zones&&zones.length>0
-    ? zones.map(function(z){return{label:z.replace(/ (NZ|AU|UK|US|CA|IE|SG)$/,''),val:z,cls:'qtag zone-tag'};})
-    : DEFAULT_LOC_TAGS.map(function(t){return{label:t.label,val:t.val,cls:'qtag'};});
-  items.forEach(function(item){
-    const span=document.createElement('span');
-    span.className=item.cls;
-    span.textContent=item.label;
-    span.addEventListener('click',function(){setL(item.val);});
-    span.addEventListener('touchend',function(e){e.preventDefault();setL(item.val);});
-    c.appendChild(span);
-  });
-}
-
-
-
-// ── City coordinates for nearest-match ────────────────────────────────────
-const ALL_CITIES=[
-  {name:'Auckland NZ',lat:-36.8889,lng:174.7700},
-  {name:'Wellington NZ',lat:-41.2865,lng:174.7762},
-  {name:'Christchurch NZ',lat:-43.5321,lng:172.6362},
-  {name:'Hamilton NZ',lat:-37.7870,lng:175.2793},
-  {name:'Tauranga NZ',lat:-37.6878,lng:176.1651},
-  {name:'Dunedin NZ',lat:-45.8788,lng:170.5028},
-  {name:'Palmerston North NZ',lat:-40.3523,lng:175.6082},
-  {name:'Nelson NZ',lat:-41.2706,lng:173.2840},
-  {name:'Rotorua NZ',lat:-38.1368,lng:176.2497},
-  {name:'Napier NZ',lat:-39.4928,lng:176.9120},
-  {name:'Queenstown NZ',lat:-45.0312,lng:168.6626},
-  {name:'Whangarei NZ',lat:-35.7275,lng:174.3166},
-  {name:'New Plymouth NZ',lat:-39.0556,lng:174.0752},
-  {name:'Invercargill NZ',lat:-46.4132,lng:168.3538},
-  {name:'Sydney AU',lat:-33.8688,lng:151.2093},
-  {name:'Melbourne AU',lat:-37.8136,lng:144.9631},
-  {name:'Brisbane AU',lat:-27.4698,lng:153.0251},
-  {name:'Perth AU',lat:-31.9505,lng:115.8605},
-  {name:'Adelaide AU',lat:-34.9285,lng:138.6007},
-  {name:'Gold Coast AU',lat:-28.0167,lng:153.4000},
-  {name:'Canberra AU',lat:-35.2809,lng:149.1300},
-  {name:'Cairns AU',lat:-16.9186,lng:145.7781},
-  {name:'Darwin AU',lat:-12.4634,lng:130.8456},
-  {name:'Hobart AU',lat:-42.8821,lng:147.3272},
-  {name:'London UK',lat:51.5074,lng:-0.1278},
-  {name:'Manchester UK',lat:53.4808,lng:-2.2426},
-  {name:'Birmingham UK',lat:52.4862,lng:-1.8904},
-  {name:'Glasgow UK',lat:55.8642,lng:-4.2518},
-  {name:'Edinburgh UK',lat:55.9533,lng:-3.1883},
-  {name:'New York US',lat:40.7128,lng:-74.0060},
-  {name:'Los Angeles US',lat:34.0522,lng:-118.2437},
-  {name:'Chicago US',lat:41.8781,lng:-87.6298},
-  {name:'San Francisco US',lat:37.7749,lng:-122.4194},
-  {name:'Miami US',lat:25.7617,lng:-80.1918},
-  {name:'Seattle US',lat:47.6062,lng:-122.3321},
-  {name:'Toronto CA',lat:43.6532,lng:-79.3832},
-  {name:'Vancouver CA',lat:49.2827,lng:-123.1207},
-  {name:'Montreal CA',lat:45.5017,lng:-73.5673},
-  {name:'Dublin IE',lat:53.3498,lng:-6.2603},
-  {name:'Singapore SG',lat:1.3521,lng:103.8198},
-  {name:'Hong Kong HK',lat:22.3193,lng:114.1694},
-  {name:'Kuala Lumpur MY',lat:3.1390,lng:101.6869},
-  {name:'Dubai AE',lat:25.2048,lng:55.2708},
-];
-
-function nearestCity(lat,lng){
-  let best=null,bestDist=Infinity;
-  ALL_CITIES.forEach(function(c){
-    const d=Math.sqrt(Math.pow(c.lat-lat,2)+Math.pow(c.lng-lng,2));
-    if(d<bestDist){bestDist=d;best=c;}
-  });
-  return best?best.name:null;
-}
-
-// ── Geolocation ───────────────────────────────────────────────────────────
-function useMyLocation(){
-  if(!navigator.geolocation){alert('Geolocation not supported.');return;}
-  const btn=document.getElementById('geo-btn');
-  btn.textContent='⏳ Locating...';btn.disabled=true;
-  let done=false;
-
-  // Safety timer: if GPS takes too long, fall back to IP location
-  const timer=setTimeout(async function(){
-    if(done)return;done=true;
-    btn.textContent='📍 My Location';btn.disabled=false;
-    try{
-      const r=await fetch('https://ipapi.co/json/',{signal:AbortSignal.timeout(5000)});
-      const d=await r.json();
-      if(d.city&&d.country_code){
-        // Find nearest city in our database
-        const loc=nearestCity(d.latitude,d.longitude)||d.city+' '+d.country_code;
-        document.getElementById('location').value=loc;
-        updateLocTags(loc);return;
-      }
-    }catch(e){}
-    alert('Could not detect location. Please type your city.');
-  },15000);
-
-  navigator.geolocation.getCurrentPosition(async function(pos){
-    if(done)return;done=true;
-    clearTimeout(timer);
-    const lat=pos.coords.latitude,lng=pos.coords.longitude;
-
-    // Step 1: Try Google reverse geocoding (city name via proxy)
-    let resolved=null;
-    try{
-      const key=getKey();
-      const PROXIES=['https://api.allorigins.win/get?url=','https://corsproxy.io/?'];
-      for(const proxy of PROXIES){
-        try{
-          const geoUrl='https://maps.googleapis.com/maps/api/geocode/json?latlng='+lat+','+lng+'&key='+key;
-          const r=await fetch(proxy+encodeURIComponent(geoUrl),{signal:AbortSignal.timeout(7000)});
-          if(!r.ok)continue;
-          const ct=r.headers.get('content-type')||'';
-          let data;
-          if(ct.includes('application/json')){const w=await r.json();data=JSON.parse(w.contents||w.data||'null');}
-          else{data=JSON.parse(await r.text());}
-          if(data&&data.results&&data.results.length>0){
-            const comps=data.results[0].address_components;
-            let city='',country='';
-            comps.forEach(function(c){
-              if(c.types.includes('locality'))city=c.long_name;
-              if(c.types.includes('country'))country=c.short_name;
-            });
-            const loc=city?(city+(country?' '+country:'')):'';
-            if(loc.length>2){resolved=loc;break;}
-          }
-        }catch(e2){continue;}
-      }
-    }catch(e){}
-
-    // Step 2: Nearest city from our database
-    if(!resolved) resolved=nearestCity(lat,lng);
-
-    // Step 3: Raw coords last resort
-    if(!resolved) resolved=lat.toFixed(2)+','+lng.toFixed(2);
-
-    document.getElementById('location').value=resolved;
-    updateLocTags(resolved);
-    btn.textContent='📍 My Location';btn.disabled=false;
-
-  },async function(err){
-    if(done)return;done=true;
-    clearTimeout(timer);
-    btn.textContent='📍 My Location';btn.disabled=false;
-    if(err.code===1){alert('Location permission denied. Allow access in browser settings.');return;}
-    // On any error, try IP fallback silently
-    try{
-      const r=await fetch('https://ipapi.co/json/',{signal:AbortSignal.timeout(5000)});
-      const d=await r.json();
-      if(d.city&&d.country_code){
-        const loc=nearestCity(d.latitude,d.longitude)||d.city+' '+d.country_code;
-        document.getElementById('location').value=loc;
-        updateLocTags(loc);return;
-      }
-    }catch(e){}
-    alert('Could not detect location. Please type your city.');
-  },{timeout:30000,maximumAge:60000,enableHighAccuracy:false});
-}
-
-// ── Autocomplete ──────────────────────────────────────────────────────────
-const LOC_SUGG=[
-  'Auckland NZ','Wellington NZ','Christchurch NZ','Hamilton NZ','Tauranga NZ',
-  'Dunedin NZ','Palmerston North NZ','Nelson NZ','Rotorua NZ','Napier NZ',
-  'Whangarei NZ','New Plymouth NZ','Invercargill NZ','Queenstown NZ',
-  'Sydney AU','Melbourne AU','Brisbane AU','Perth AU','Adelaide AU',
-  'Gold Coast AU','Canberra AU','Darwin AU','Hobart AU','Cairns AU',
-  'London UK','Manchester UK','Birmingham UK','Glasgow UK','Edinburgh UK',
-  'Liverpool UK','Leeds UK','Bristol UK','Cardiff UK','Belfast UK',
-  'New York US','Los Angeles US','Chicago US','Houston US','Miami US',
-  'San Francisco US','Seattle US','Boston US','Denver US','Las Vegas US',
-  'Toronto CA','Vancouver CA','Montreal CA','Calgary CA','Edmonton CA',
-  'Dublin IE','Cork IE','Singapore SG','Hong Kong HK','Kuala Lumpur MY',
-  'Dubai AE','Bangkok TH','Tokyo JP','Cape Town ZA','Johannesburg ZA',
-];
-const BIZ_SUGG=[
-  'vet clinics','veterinarians','animal hospitals','dog daycare','pet grooming','pet shops',
-  'dentists','dental clinics','orthodontists','oral surgeons',
-  'doctors','GP clinics','medical centres','physiotherapists','chiropractors','osteopaths',
-  'pharmacies','optometrists','psychologists','counsellors','speech therapists',
-  'restaurants','cafes','coffee shops','bakeries','pizza restaurants','sushi restaurants','food trucks',
-  'hair salons','beauty salons','nail salons','barbershops','massage therapists','spas',
-  'gyms','fitness centres','yoga studios','pilates studios','personal trainers','crossfit',
-  'lawyers','law firms','solicitors','conveyancers','immigration lawyers',
-  'accountants','bookkeepers','tax agents','financial advisers','mortgage brokers',
-  'real estate agents','property managers','building inspectors',
-  'plumbers','electricians','builders','painters','landscapers','cleaners','roofers',
-  'mechanics','car dealerships','car wash','tyre shops','panel beaters',
-  'hotels','motels','bed and breakfast','holiday parks','hostels',
-  'supermarkets','liquor stores','florists','gift shops','pharmacies',
-  'childcare centres','preschools','tutors','driving schools','dance schools',
-  'insurance brokers','marketing agencies','web designers','IT support','printers',
-];
-
-function setupAC(inputId,suggestions,dropId){
-  const inp=document.getElementById(inputId);
-  const drop=document.getElementById(dropId);
-  function update(){
-    const val=inp.value.toLowerCase().trim();
-    drop.innerHTML='';
-    if(!val){drop.style.display='none';return;}
-    const matches=suggestions.filter(function(s){return s.toLowerCase().includes(val);}).slice(0,7);
-    if(!matches.length){drop.style.display='none';return;}
-    matches.forEach(function(s){
-      const d=document.createElement('div');
-      d.className='ac-item';d.textContent=s;
-      function pick(){inp.value=s;drop.style.display='none';if(inputId==='location')updateLocTags(s);}
-      d.addEventListener('mousedown',function(e){e.preventDefault();pick();});
-      d.addEventListener('touchstart',function(e){e.preventDefault();pick();},{passive:false});
-      drop.appendChild(d);
-    });
-    drop.style.display='block';
-  }
-  inp.addEventListener('input',update);
-  inp.addEventListener('focus',update);
-  inp.addEventListener('blur',function(){setTimeout(function(){drop.style.display='none';},250);});
-}
-
-// Init
-setupAC('location',LOC_SUGG,'loc-drop');
-setupAC('biz-type',BIZ_SUGG,'biz-drop');
-
-// ── Stop scraping ─────────────────────────────────────────────────────────
-function stopScraping(){
-  STOP_SCRAPE=true;
-  document.getElementById('stop-btn').style.display='none';
-  setSt('',false);
-}
-
-// ── Filters & sort ────────────────────────────────────────────────────────
-function applyFilter(f){
-  ACTIVE_FILTER=f;
-  document.querySelectorAll('[id^="f-"]').forEach(function(b){b.classList.remove('active');});
-  const btn=document.getElementById('f-'+f);
-  if(btn)btn.classList.add('active');
-  renderVisible();
-}
-
-function applyRating(r){
-  ACTIVE_RATING=r;
-  document.querySelectorAll('[id^="fr-"]').forEach(function(b){b.classList.remove('active');});
-  const map={0:'fr-any',3:'fr-3',4:'fr-4',4.5:'fr-45'};
-  const btn=document.getElementById(map[r]);
-  if(btn)btn.classList.add('active');
-  renderVisible();
-}
-
-function applySort(s){
-  ACTIVE_SORT=s;
-  document.querySelectorAll('[id^="fs-"]').forEach(function(b){b.classList.remove('active');});
-  const btn=document.getElementById('fs-'+s);
-  if(btn)btn.classList.add('active');
-  renderVisible();
-}
-
-function getFilteredSorted(){
-  let items=BIZ.map(function(b,i){return{b:b,i:i};});
-
-  // Filter
-  if(ACTIVE_FILTER==='email')  items=items.filter(function(x){return x.b.emails&&x.b.emails.length>0;});
-  if(ACTIVE_FILTER==='phone')  items=items.filter(function(x){return x.b.phone&&x.b.phone.trim();});
-  if(ACTIVE_FILTER==='web')    items=items.filter(function(x){return x.b.website&&x.b.website.trim();});
-  if(ACTIVE_FILTER==='open')   items=items.filter(function(x){return x.b.open_now===true;});
-  if(ACTIVE_FILTER==='noemail')items=items.filter(function(x){return !x.b.emails||x.b.emails.length===0;});
-
-  // Rating filter
-  if(ACTIVE_RATING>0) items=items.filter(function(x){return(x.b.rating||0)>=ACTIVE_RATING;});
-
-  // Sort
-  if(ACTIVE_SORT==='rating')  items.sort(function(a,b){return(b.b.rating||0)-(a.b.rating||0);});
-  if(ACTIVE_SORT==='reviews') items.sort(function(a,b){return(b.b.reviews||0)-(a.b.reviews||0);});
-  if(ACTIVE_SORT==='name')    items.sort(function(a,b){return a.b.name.localeCompare(b.b.name);});
-
-  return items;
-}
-
-function renderVisible(){
-  const grid=document.getElementById('biz-list');
-  if(!grid)return;
-  const items=getFilteredSorted();
-  grid.innerHTML='';
-  if(!items.length){
-    grid.innerHTML='<div style="text-align:center;padding:40px 20px;font-family:var(--mono);font-size:11px;color:var(--muted)">No results match this filter.</div>';
-    return;
-  }
-  items.forEach(function(x,displayIdx){
-    grid.insertAdjacentHTML('beforeend', cardHTML(x.b, x.i, displayIdx+1));
-  });
-  // Update shown count
-  document.getElementById('rc-total').textContent=items.length+'/'+BIZ.length+' shown';
-}
+if(prefs.location)document.getElementById('location').value=prefs.location;
 </script>
 </body>
 </html>
