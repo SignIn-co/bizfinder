@@ -881,7 +881,7 @@ async function startSearch(){
     const seen=new Set();let all=[];
     for(let qi=0;qi<zones.length;qi++){
       setP((qi/zones.length)*35,`Zone ${qi+1}/${zones.length}: Searching...`,zones[qi]);
-      try{const zp=await fetchPages(zones[qi]);for(const p of zp){if(!seen.has(p.place_id)){seen.add(p.place_id);all.push(p)}}}catch(e){if(e.message==='NO_KEY'||e.message.includes('denied'))throw e;console.warn(e)}
+      try{const zp=await fetchAllPages(zones[qi]);for(const p of zp){if(!seen.has(p.place_id)){seen.add(p.place_id);all.push(p)}}}catch(e){if(e.message==='NO_KEY'||e.message.includes('denied'))throw e;console.warn(e)}
       if(all.length>=max)break;
     }
     if(minR>0)all=all.filter(p=>(p.rating||0)>=minR);
@@ -892,8 +892,16 @@ async function startSearch(){
     for(let i=0;i<all.length;i++){
       setP(35+((i/all.length)*30),`Getting details: ${i+1}/${all.length}...`,all[i].name||'');
       const p=all[i];let det={};
-      try{const dr=await gFetch('details/json',{place_id:p.place_id,fields:'name,formatted_address,formatted_phone_number,website,rating,user_ratings_total,opening_hours,url'});det=dr.result||{}}catch(_){}
-      BIZ.push({name:det.name||p.name||'',address:det.formatted_address||p.formatted_address||'',phone:det.formatted_phone_number||'',website:det.website||'',rating:det.rating||p.rating||'',reviews:det.user_ratings_total||p.user_ratings_total||'',open_now:det.opening_hours?.open_now??p.opening_hours?.open_now,maps_url:det.url||`https://www.google.com/maps/place/?q=place_id:${p.place_id}`,emails:[],es:doE?'pending':'skipped'});
+      try{const sdkDet=await sdkGetDetails(p.place_id);if(sdkDet)det=sdkDet;}catch(_){}
+      // SDK returns objects, REST returns strings — normalise both
+      const addr=det.formatted_address||det.adr_address||p.formatted_address||p.vicinity||'';
+      const phone=det.formatted_phone_number||'';
+      const site=det.website||'';
+      const rat=det.rating||p.rating||'';
+      const rev=det.user_ratings_total||p.user_ratings_total||'';
+      const isOpen=det.opening_hours?det.opening_hours.isOpen():p.opening_hours?.open_now;
+      const murl=det.url||`https://www.google.com/maps/place/?q=place_id:${p.place_id}`;
+      BIZ.push({name:det.name||p.name||'',address:addr,phone:phone,website:site,rating:rat,reviews:rev,open_now:isOpen,maps_url:murl,emails:[],es:doE?'pending':'skipped'});
     }
 
     renderResults();
