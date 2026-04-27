@@ -255,21 +255,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .fbtn:active{transform:scale(.95)}
 .fbtn.active{background:var(--accent);border-color:var(--accent);color:#fff}
 </style>
-<script>
-// Google Maps JS SDK loader — called after key is confirmed
-function loadGoogleMaps(key) {
-  return new Promise(function(resolve, reject) {
-    if (window.google && window.google.maps && window.google.maps.places) {
-      resolve(); return;
-    }
-    window._googleMapsCallback = resolve;
-    const s = document.createElement('script');
-    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + key + '&libraries=places&callback=_googleMapsCallback';
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-}
-</script>
 </head>
 <body>
 
@@ -598,70 +583,37 @@ function savePrefs(){
 
 // ── Google Places (direct fetch with API key) ─────────────────────────────────
 // Note: Google Places API supports CORS from browsers when called directly
-async function ensureSDK() {
-  const key = getKey();
-  if (!key) throw new Error('NO_KEY');
-  await loadGoogleMaps(key);
-}
-
-// Search using Google Maps JS SDK PlacesService (browser-native, no CORS)
-function sdkTextSearch(query) {
-  return new Promise(async function(resolve, reject) {
-    await ensureSDK();
-    const map = new google.maps.Map(document.createElement('div'));
-    const svc = new google.maps.places.PlacesService(map);
-    svc.textSearch({ query: query }, function(results, status, pagination) {
-      if (status === google.maps.places.PlacesServiceStatus.OK) {
-        resolve({ results: results, pagination: pagination });
-      } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-        resolve({ results: [] });
-      } else {
-        reject(new Error('Google Places error: ' + status));
-      }
-    });
-  });
-}
-
-function sdkGetDetails(placeId) {
-  return new Promise(async function(resolve, reject) {
-    await ensureSDK();
-    const map = new google.maps.Map(document.createElement('div'));
-    const svc = new google.maps.places.PlacesService(map);
-    const fields = ['name','formatted_address','formatted_phone_number','website','rating','user_ratings_total','opening_hours','url'];
-    svc.getDetails({ placeId: placeId, fields: fields }, function(result, status) {
-      if (status === google.maps.places.PlacesServiceStatus.OK) {
-        resolve(result);
-      } else {
-        resolve(null);
-      }
-    });
-  });
-}
-
-function sdkGetNextPage(pagination) {
-  return new Promise(function(resolve) {
-    if (!pagination || !pagination.hasNextPage) { resolve([]); return; }
-    setTimeout(function() {
-      pagination.nextPage(function(results, status) {
-        if (status === google.maps.places.PlacesServiceStatus.OK) resolve(results);
-        else resolve([]);
-      });
-    }, 2200);
-  });
-}
-
-async function fetchAllPages(query) {
-  let allPlaces = [];
-  const first = await sdkTextSearch(query);
-  allPlaces = allPlaces.concat(first.results || []);
-  if (first.pagination && first.pagination.hasNextPage && allPlaces.length < 60) {
-    const page2 = await sdkGetNextPage(first.pagination);
-    allPlaces = allPlaces.concat(page2);
-    // Note: SDK only supports 2 extra pages (60 total) same as REST API
+async function gFetch(endpoint,params){
+  const key=getKey();
+  if(!key)throw new Error('NO_KEY');
+  params.key=key;
+  const googleUrl='https://maps.googleapis.com/maps/api/place/'+endpoint+'?'+new URLSearchParams(params);
+  const GPROXIES=['https://api.allorigins.win/get?url=','https://corsproxy.io/?','https://api.codetabs.com/v1/proxy?quest='];
+  for(const proxy of GPROXIES){
+    try{
+      const r=await fetch(proxy+encodeURIComponent(googleUrl),{signal:AbortSignal.timeout(12000)});
+      if(!r.ok)continue;
+      const ct=r.headers.get('content-type')||'';
+      let data;
+      if(ct.includes('application/json')){const w=await r.json();const raw=w.contents||w.data||null;if(!raw)continue;data=JSON.parse(raw);}
+      else{data=JSON.parse(await r.text());}
+      if(data&&data.status)return data;
+    }catch(e){continue;}
   }
-  return allPlaces;
+  throw new Error('All proxies failed. Check your internet connection.');
 }
-
+async function fetchPages(query){
+  let pl=[],tok=null,pg=0;
+  while(pg<3){
+    if(pg>0)await new Promise(r=>setTimeout(r,2200));
+    const p={query};if(tok)p.pagetoken=tok;
+    const d=await gFetch('textsearch/json',p);
+    if(d.status==='REQUEST_DENIED')throw new Error('API key denied. Check Places API is enabled.');
+    if(d.status==='ZERO_RESULTS'||d.status!=='OK')break;
+    pl=pl.concat(d.results||[]);tok=d.next_page_token||null;pg++;if(!tok)break;
+  }
+  return pl;
+}
 
 function buildZones(bt,loc,max){
   const n=max<=60?1:max<=120?2:max<=200?4:max<=500?8:12;
@@ -881,7 +833,7 @@ async function startSearch(){
     const seen=new Set();let all=[];
     for(let qi=0;qi<zones.length;qi++){
       setP((qi/zones.length)*35,`Zone ${qi+1}/${zones.length}: Searching...`,zones[qi]);
-      try{const zp=await fetchAllPages(zones[qi]);for(const p of zp){if(!seen.has(p.place_id)){seen.add(p.place_id);all.push(p)}}}catch(e){if(e.message==='NO_KEY'||e.message.includes('denied'))throw e;console.warn(e)}
+      try{const zp=await fetchPages(zones[qi]);for(const p of zp){if(!seen.has(p.place_id)){seen.add(p.place_id);all.push(p)}}}catch(e){if(e.message==='NO_KEY'||e.message.includes('denied'))throw e;console.warn(e)}
       if(all.length>=max)break;
     }
     if(minR>0)all=all.filter(p=>(p.rating||0)>=minR);
@@ -892,16 +844,8 @@ async function startSearch(){
     for(let i=0;i<all.length;i++){
       setP(35+((i/all.length)*30),`Getting details: ${i+1}/${all.length}...`,all[i].name||'');
       const p=all[i];let det={};
-      try{const sdkDet=await sdkGetDetails(p.place_id);if(sdkDet)det=sdkDet;}catch(_){}
-      // SDK returns objects, REST returns strings — normalise both
-      const addr=det.formatted_address||det.adr_address||p.formatted_address||p.vicinity||'';
-      const phone=det.formatted_phone_number||'';
-      const site=det.website||'';
-      const rat=det.rating||p.rating||'';
-      const rev=det.user_ratings_total||p.user_ratings_total||'';
-      const isOpen=det.opening_hours?det.opening_hours.isOpen():p.opening_hours?.open_now;
-      const murl=det.url||`https://www.google.com/maps/place/?q=place_id:${p.place_id}`;
-      BIZ.push({name:det.name||p.name||'',address:addr,phone:phone,website:site,rating:rat,reviews:rev,open_now:isOpen,maps_url:murl,emails:[],es:doE?'pending':'skipped'});
+      try{const dr=await gFetch('details/json',{place_id:p.place_id,fields:'name,formatted_address,formatted_phone_number,website,rating,user_ratings_total,opening_hours,url'});det=dr.result||{}}catch(_){}
+      BIZ.push({name:det.name||p.name||'',address:det.formatted_address||p.formatted_address||'',phone:det.formatted_phone_number||'',website:det.website||'',rating:det.rating||p.rating||'',reviews:det.user_ratings_total||p.user_ratings_total||'',open_now:det.opening_hours?.open_now??p.opening_hours?.open_now,maps_url:det.url||`https://www.google.com/maps/place/?q=place_id:${p.place_id}`,emails:[],es:doE?'pending':'skipped'});
     }
 
     renderResults();
@@ -1175,26 +1119,31 @@ function useMyLocation(){
     clearTimeout(timer);
     const lat=pos.coords.latitude,lng=pos.coords.longitude;
 
-    // Step 1: Use Google Maps SDK Geocoder (browser-native, no CORS)
+    // Step 1: Try Google reverse geocoding (city name via proxy)
     let resolved=null;
     try{
-      await ensureSDK();
-      const result = await new Promise(function(res){
-        const geocoder=new google.maps.Geocoder();
-        geocoder.geocode({location:{lat:lat,lng:lng}},function(results,status){
-          if(status==='OK'&&results&&results.length>0) res(results[0]);
-          else res(null);
-        });
-      });
-      if(result){
-        const comps=result.address_components||[];
-        let city='',country='';
-        comps.forEach(function(c){
-          if(c.types.includes('locality'))city=c.long_name;
-          if(c.types.includes('country'))country=c.short_name;
-        });
-        const loc=city?(city+(country?' '+country:'')):'';
-        if(loc.length>2)resolved=loc;
+      const key=getKey();
+      const PROXIES=['https://api.allorigins.win/get?url=','https://corsproxy.io/?'];
+      for(const proxy of PROXIES){
+        try{
+          const geoUrl='https://maps.googleapis.com/maps/api/geocode/json?latlng='+lat+','+lng+'&key='+key;
+          const r=await fetch(proxy+encodeURIComponent(geoUrl),{signal:AbortSignal.timeout(7000)});
+          if(!r.ok)continue;
+          const ct=r.headers.get('content-type')||'';
+          let data;
+          if(ct.includes('application/json')){const w=await r.json();data=JSON.parse(w.contents||w.data||'null');}
+          else{data=JSON.parse(await r.text());}
+          if(data&&data.results&&data.results.length>0){
+            const comps=data.results[0].address_components;
+            let city='',country='';
+            comps.forEach(function(c){
+              if(c.types.includes('locality'))city=c.long_name;
+              if(c.types.includes('country'))country=c.short_name;
+            });
+            const loc=city?(city+(country?' '+country:'')):'';
+            if(loc.length>2){resolved=loc;break;}
+          }
+        }catch(e2){continue;}
       }
     }catch(e){}
 
