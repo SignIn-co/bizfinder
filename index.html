@@ -583,25 +583,67 @@ function savePrefs(){
 
 // ── Google Places (direct fetch with API key) ─────────────────────────────────
 // Note: Google Places API supports CORS from browsers when called directly
-async function gFetch(endpoint,params){
-  const key=getKey();
-  if(!key)throw new Error('NO_KEY');
-  params.key=key;
-  const googleUrl='https://maps.googleapis.com/maps/api/place/'+endpoint+'?'+new URLSearchParams(params);
-  const GPROXIES=['https://api.allorigins.win/get?url=','https://corsproxy.io/?','https://api.codetabs.com/v1/proxy?quest='];
-  for(const proxy of GPROXIES){
+async function gFetch(endpoint, params){
+  const key = getKey();
+  if(!key) throw new Error('NO_KEY');
+  params.key = key;
+  const googleUrl = 'https://maps.googleapis.com/maps/api/place/' + endpoint + '?' + new URLSearchParams(params);
+
+  // Try direct fetch first (works if browser allows it)
+  try {
+    const r = await fetch(googleUrl, {signal: AbortSignal.timeout(10000), mode: 'cors'});
+    if(r.ok){
+      const data = await r.json();
+      if(data && data.status) return data;
+    }
+  } catch(e) {}
+
+  // CORS proxies - try each one
+  const PROXIES = [
+    async (u) => {
+      const r = await fetch('https://corsproxy.io/?' + encodeURIComponent(u), {signal: AbortSignal.timeout(12000)});
+      const t = await r.text();
+      return JSON.parse(t);
+    },
+    async (u) => {
+      const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(u), {signal: AbortSignal.timeout(12000)});
+      const d = await r.json();
+      return JSON.parse(d.contents);
+    },
+    async (u) => {
+      const r = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u), {signal: AbortSignal.timeout(12000)});
+      const t = await r.text();
+      return JSON.parse(t);
+    },
+    async (u) => {
+      const r = await fetch('https://thingproxy.freeboard.io/fetch/' + u, {signal: AbortSignal.timeout(12000)});
+      const t = await r.text();
+      return JSON.parse(t);
+    },
+    async (u) => {
+      const r = await fetch('https://cors-anywhere.herokuapp.com/' + u, {signal: AbortSignal.timeout(12000)});
+      const t = await r.text();
+      return JSON.parse(t);
+    },
+  ];
+
+  let lastErr = '';
+  for(const proxy of PROXIES){
     try{
-      const r=await fetch(proxy+encodeURIComponent(googleUrl),{signal:AbortSignal.timeout(12000)});
-      if(!r.ok)continue;
-      const ct=r.headers.get('content-type')||'';
-      let data;
-      if(ct.includes('application/json')){const w=await r.json();const raw=w.contents||w.data||null;if(!raw)continue;data=JSON.parse(raw);}
-      else{data=JSON.parse(await r.text());}
-      if(data&&data.status)return data;
-    }catch(e){continue;}
+      const data = await proxy(googleUrl);
+      if(data && data.status){
+        if(data.status === 'REQUEST_DENIED') throw new Error('Google API key denied: ' + (data.error_message||'Check Places API is enabled in Google Cloud Console'));
+        return data;
+      }
+    } catch(e){
+      lastErr = e.message;
+      continue;
+    }
   }
-  throw new Error('All proxies failed. Check your internet connection.');
+  throw new Error('Could not reach Google API. All proxies failed. Last error: ' + lastErr);
 }
+
+
 async function fetchPages(query){
   let pl=[],tok=null,pg=0;
   while(pg<3){
